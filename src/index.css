@@ -1,0 +1,63 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+  }
+  body {
+    @apply bg-obsidian text-frost font-sans antialiased;
+  }
+  ::selection {
+    @apply bg-frost text-obsidian;
+  }
+}
+
+@layer components {
+  .btn-primary {
+    @apply inline-flex items-center justify-center gap-2 bg-frost text-obsidian px-7 py-3.5 text-xs font-medium tracking-widest uppercase transition-all duration-300 hover:bg-gold hover:text-obsidian;
+  }
+  .btn-ghost {
+    @apply inline-flex items-center justify-center gap-2 border border-frost/30 text-frost px-7 py-3.5 text-xs font-medium tracking-widest uppercase transition-all duration-300 hover:border-frost hover:bg-frost hover:text-obsidian;
+  }
+  .btn-whatsapp {
+    @apply inline-flex items-center justify-center gap-2 bg-[#1f7a4d] text-white px-6 py-3 text-xs font-medium tracking-widest uppercase transition-all duration-300 hover:bg-[#176b40];
+  }
+  .section-label {
+    @apply text-[10px] tracking-[0.4em] uppercase text-slate-muted;
+  }
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+}
+::-webkit-scrollbar-track {
+  background: #080808;
+}
+::-webkit-scrollbar-thumb {
+  background: #2a2f3a;
+  border-radius: 0;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #6b7280;
+}
+
+/* Image zoom container */
+.img-zoom {
+  overflow: hidden;
+}
+.img-zoom img {
+  transition: transform 1.2s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.img-zoom:hover img {
+  transform: scale(1.08);
+}
+
+/* Marquee */
+.marquee-track {
+  display: flex;
+  white-space: nowrap;
+  will-change: transform;
+}
