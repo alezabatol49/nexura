@@ -4,6 +4,7 @@ export type Product = {
   category: string;
   gender: string;
   price_pkr: number;
+  compare_price_pkr: number | null;
   description: string;
   image_url: string;
   image_url_2: string | null;
@@ -14,6 +15,20 @@ export type Product = {
   in_stock: boolean;
   created_at: string;
 };
+
+export const ADMIN_CATEGORIES = [
+  { slug: "puffer-jackets", label: "Puffer Jackets" },
+  { slug: "arctic-parkas", label: "Arctic Parkas" },
+  { slug: "hoodies", label: "Heavyweight Hoodies" },
+  { slug: "cashmere-sweaters", label: "Cashmere Sweaters" },
+  { slug: "gloves", label: "Accessories" },
+  { slug: "thermal-socks", label: "Thermal Socks" },
+  { slug: "balaclavas", label: "Balaclavas" },
+] as const;
+
+export const ALL_SIZES = ["XS", "S", "M", "L", "XL", "XXL"] as const;
+export const ALL_GENDERS = ["men", "women", "unisex"] as const;
+export const ADMIN_PIN = "9404";
 
 export type CurrencyCode = "PKR" | "USD" | "AED" | "GBP";
 

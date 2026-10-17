@@ -53,7 +53,12 @@ export default function ProductCard({ product, onQuickView }: Props) {
           <span className="text-[9px] tracking-[0.3em] uppercase text-slate-muted">
             {product.gender === "unisex" ? "Unisex" : product.gender === "men" ? "Mens" : "Womens"}
           </span>
-          <span className="text-[11px] text-gold font-medium">{formatPrice(product.price_pkr, currency)}</span>
+          <span className="flex items-baseline gap-1.5">
+            <span className="text-[11px] text-gold font-medium">{formatPrice(product.price_pkr, currency)}</span>
+            {product.compare_price_pkr != null && product.compare_price_pkr > product.price_pkr && (
+              <span className="text-[9px] text-frost/30 line-through">{formatPrice(product.compare_price_pkr, currency)}</span>
+            )}
+          </span>
         </div>
         <h3 className="text-sm text-frost font-medium leading-snug">{product.name}</h3>
 

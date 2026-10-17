@@ -1,4 +1,5 @@
 import { CurrencyProvider } from "./lib/CurrencyContext";
+import { useRoute, navigate } from "./lib/useRoute";
 import TopBar from "./components/TopBar";
 import Header from "./components/Header";
 import Hero from "./components/Hero";
@@ -7,8 +8,15 @@ import Catalog from "./components/Catalog";
 import Editorial from "./components/Editorial";
 import Footer from "./components/Footer";
 import FloatingWhatsApp from "./components/FloatingWhatsApp";
+import Admin from "./components/Admin";
 
 export default function App() {
+  const route = useRoute();
+
+  if (route === "/admin") {
+    return <Admin />;
+  }
+
   return (
     <CurrencyProvider>
       <div className="min-h-screen bg-obsidian text-frost">

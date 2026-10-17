@@ -74,6 +74,9 @@ export default function Footer() {
         <p className="text-[11px] text-frost/40 tracking-wider">
           WhatsApp: 0321-9404812 · COD Across Pakistan
         </p>
+        <a href="#/admin" className="text-[11px] text-frost/25 tracking-wider hover:text-gold transition-colors">
+          Admin
+        </a>
       </div>
     </footer>
   );

@@ -53,7 +53,12 @@ export default function QuickView({ product, onClose }: Props) {
           </div>
 
           <h2 className="font-display text-2xl lg:text-3xl text-frost font-bold leading-tight mb-3">{product.name}</h2>
-          <p className="text-gold text-lg font-medium mb-6">{formatPrice(product.price_pkr, currency)}</p>
+          <div className="flex items-baseline gap-3 mb-6">
+            <p className="text-gold text-lg font-medium">{formatPrice(product.price_pkr, currency)}</p>
+            {product.compare_price_pkr != null && product.compare_price_pkr > product.price_pkr && (
+              <p className="text-sm text-frost/30 line-through">{formatPrice(product.compare_price_pkr, currency)}</p>
+            )}
+          </div>
 
           <p className="text-sm text-frost/60 leading-relaxed mb-8">{product.description}</p>
 
