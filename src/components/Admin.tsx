@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import {
   Lock,
   Plus,
@@ -14,6 +14,10 @@ import {
   AlertCircle,
   Search,
   ArrowLeft,
+  Sparkles,
+  Camera,
+  Loader2,
+  Wand2,
 } from "lucide-react";
 import { supabase } from "../lib/supabase";
 import {
@@ -31,9 +35,15 @@ import {
   hasGitHubToken,
   pushToGitHub,
 } from "../lib/github";
+import {
+  getGeminiKey,
+  saveGeminiKey,
+  isGeminiConfigured,
+  analyzeProductImage,
+} from "../lib/gemini";
 import { navigate } from "../lib/useRoute";
 
-type Tab = "products" | "settings";
+type Tab = "products" | "ai" | "settings";
 
 type FormData = {
   name: string;
@@ -203,7 +213,7 @@ function AdminDashboard({ onLogout }: { onLogout: () => void }) {
         showToast("Add failed: " + error.message, "err");
         return;
       }
-      showToast("Product added");
+      showToast("Product published to live store");
     }
 
     // GitHub sync
@@ -267,6 +277,7 @@ function AdminDashboard({ onLogout }: { onLogout: () => void }) {
         {/* Tabs */}
         <div className="flex px-4 sm:px-6">
           <TabBtn active={tab === "products"} onClick={() => setTab("products")} icon={Package} label="Products" />
+          <TabBtn active={tab === "ai"} onClick={() => setTab("ai")} icon={Sparkles} label="AI Publisher" />
           <TabBtn active={tab === "settings"} onClick={() => setTab("settings")} icon={SettingsIcon} label="Settings" />
         </div>
       </header>
@@ -292,6 +303,14 @@ function AdminDashboard({ onLogout }: { onLogout: () => void }) {
             onDelete={handleDelete}
           />
         )}
+        {tab === "ai" && (
+          <AIPublisherTab
+            onPublish={async (form) => {
+              await handleSave(form, null);
+            }}
+            showToast={showToast}
+          />
+        )}
         {tab === "settings" && (
           <SettingsTab github={github} onSave={(g) => { saveGitHubSettings(g); setGithub(g); showToast("Settings saved"); }} />
         )}
@@ -312,11 +331,11 @@ function TabBtn({ active, onClick, icon: Icon, label }: { active: boolean; onCli
   return (
     <button
       onClick={onClick}
-      className={`flex items-center gap-2 px-5 py-3 text-[11px] tracking-[0.2em] uppercase border-b-2 transition-colors ${
+      className={`flex items-center gap-2 px-4 sm:px-5 py-3 text-[10px] sm:text-[11px] tracking-[0.2em] uppercase border-b-2 transition-colors ${
         active ? "border-gold text-frost" : "border-transparent text-frost/40 hover:text-frost/70"
       }`}
     >
-      <Icon size={14} /> {label}
+      <Icon size={14} /> <span className="hidden xs:inline">{label}</span>
     </button>
   );
 }
@@ -383,12 +402,9 @@ function ProductRow({ product, onEdit, onDelete }: { product: Product; onEdit: (
   const catLabel = ADMIN_CATEGORIES.find((c) => c.slug === product.category)?.label ?? product.category;
   return (
     <div className="flex items-center gap-3 sm:gap-4 bg-obsidian-50 border border-frost/8 p-3 hover:border-frost/15 transition-colors">
-      {/* Thumb */}
       <div className="w-16 h-16 sm:w-20 sm:h-20 shrink-0 bg-obsidian overflow-hidden">
         <img src={product.image_url} alt={product.name} className="w-full h-full object-cover" loading="lazy" />
       </div>
-
-      {/* Info */}
       <div className="flex-1 min-w-0">
         <h3 className="text-sm text-frost font-medium truncate">{product.name}</h3>
         <p className="text-[10px] tracking-wider uppercase text-frost/40 mt-0.5">{catLabel}</p>
@@ -404,8 +420,6 @@ function ProductRow({ product, onEdit, onDelete }: { product: Product; onEdit: (
           </span>
         </div>
       </div>
-
-      {/* Actions */}
       <div className="flex flex-col sm:flex-row gap-2 shrink-0">
         <button
           onClick={onEdit}
@@ -425,6 +439,342 @@ function ProductRow({ product, onEdit, onDelete }: { product: Product; onEdit: (
     </div>
   );
 }
+
+/* — AI Publisher Tab — */
+
+function AIPublisherTab({
+  onPublish,
+  showToast,
+}: {
+  onPublish: (form: FormData) => Promise<void>;
+  showToast: (msg: string, type?: "ok" | "err") => void;
+}) {
+  const [imageDataUrl, setImageDataUrl] = useState("");
+  const [salePrice, setSalePrice] = useState("");
+  const [generating, setGenerating] = useState(false);
+  const [publishing, setPublishing] = useState(false);
+  const [review, setReview] = useState<FormData | null>(null);
+  const cameraInputRef = useRef<HTMLInputElement>(null);
+  const galleryInputRef = useRef<HTMLInputElement>(null);
+
+  const handleFile = (file: File) => {
+    if (file.size > 4 * 1024 * 1024) {
+      showToast("Image must be under 4MB", "err");
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = () => {
+      setImageDataUrl(reader.result as string);
+      setReview(null);
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleGenerate = async () => {
+    if (!imageDataUrl) {
+      showToast("Upload a product image first", "err");
+      return;
+    }
+    const price = parseFloat(salePrice);
+    if (!price || price <= 0) {
+      showToast("Enter a valid sale price", "err");
+      return;
+    }
+    if (!isGeminiConfigured()) {
+      showToast("Gemini API key not configured", "err");
+      return;
+    }
+
+    setGenerating(true);
+    try {
+      const result = await analyzeProductImage(imageDataUrl, price);
+      const compareAt = Math.round(price * 1.25 / 50) * 50;
+      setReview({
+        name: result.name,
+        category: result.category,
+        gender: "unisex",
+        price_pkr: String(price),
+        compare_price_pkr: String(result.compareAtPrice || compareAt),
+        description: result.description,
+        image_url: imageDataUrl,
+        sizes: result.sizes,
+        colors: "Obsidian,Frost",
+        badge: "New",
+        in_stock: true,
+      });
+      showToast("AI generated product details — review and publish");
+    } catch (err) {
+      showToast(err instanceof Error ? err.message : "AI generation failed", "err");
+    }
+    setGenerating(false);
+  };
+
+  const handlePublish = async () => {
+    if (!review) return;
+    setPublishing(true);
+    try {
+      await onPublish(review);
+      // Reset on success
+      setImageDataUrl("");
+      setSalePrice("");
+      setReview(null);
+    } catch {
+      showToast("Publish failed", "err");
+    }
+    setPublishing(false);
+  };
+
+  const handleEditReview = (patch: Partial<FormData>) => {
+    setReview((prev) => (prev ? { ...prev, ...patch } : prev));
+  };
+
+  return (
+    <div className="max-w-lg">
+      {/* Header */}
+      <div className="mb-8">
+        <div className="flex items-center gap-2 mb-3">
+          <Sparkles size={20} className="text-gold" />
+          <h2 className="font-display text-xl text-frost font-bold">AI Product Publisher</h2>
+        </div>
+        <p className="text-sm text-frost/50 leading-relaxed">
+          Upload a product photo and set a price. Gemini AI will automatically write the title, description, pick a category, and calculate the compare-at price.
+        </p>
+      </div>
+
+      {/* Gemini status badge */}
+      <div className="flex items-center gap-2 mb-6">
+        <span className={`w-2 h-2 rounded-full ${isGeminiConfigured() ? "bg-[#1f7a4d]" : "bg-red-400"}`} />
+        <span className="text-[11px] tracking-wider text-frost/50">
+          {isGeminiConfigured() ? "Gemini Flash connected" : "Gemini not configured — check Settings"}
+        </span>
+      </div>
+
+      {/* Step 1: Image + Price */}
+      {!review && (
+        <div className="space-y-6 bg-obsidian-50 border border-frost/8 p-5">
+          {/* Image upload */}
+          <div>
+            <Label>Product Image</Label>
+            {imageDataUrl ? (
+              <div className="relative">
+                <img src={imageDataUrl} alt="Preview" className="w-full aspect-square object-cover border border-frost/10" />
+                <button
+                  onClick={() => setImageDataUrl("")}
+                  className="absolute top-3 right-3 w-9 h-9 bg-obsidian/80 backdrop-blur-sm flex items-center justify-center text-frost hover:bg-red-900 transition-colors"
+                >
+                  <X size={16} />
+                </button>
+              </div>
+            ) : (
+              <div className="grid grid-cols-2 gap-3">
+                <button
+                  onClick={() => cameraInputRef.current?.click()}
+                  className="flex flex-col items-center justify-center gap-3 aspect-square border border-dashed border-frost/20 hover:border-gold/40 hover:text-gold text-frost/40 transition-colors"
+                >
+                  <Camera size={28} />
+                  <span className="text-[10px] tracking-[0.2em] uppercase">Camera</span>
+                </button>
+                <button
+                  onClick={() => galleryInputRef.current?.click()}
+                  className="flex flex-col items-center justify-center gap-3 aspect-square border border-dashed border-frost/20 hover:border-gold/40 hover:text-gold text-frost/40 transition-colors"
+                >
+                  <Upload size={28} />
+                  <span className="text-[10px] tracking-[0.2em] uppercase">Gallery</span>
+                </button>
+              </div>
+            )}
+            <input
+              ref={cameraInputRef}
+              type="file"
+              accept="image/*"
+              capture="environment"
+              className="hidden"
+              onChange={(e) => { const f = e.target.files?.[0]; if (f) handleFile(f); }}
+            />
+            <input
+              ref={galleryInputRef}
+              type="file"
+              accept="image/*"
+              className="hidden"
+              onChange={(e) => { const f = e.target.files?.[0]; if (f) handleFile(f); }}
+            />
+          </div>
+
+          {/* Price */}
+          <div>
+            <Label>Sale Price (PKR)</Label>
+            <div className="relative">
+              <span className="absolute left-4 top-1/2 -translate-y-1/2 text-frost/40 text-sm">Rs</span>
+              <input
+                type="number"
+                inputMode="numeric"
+                value={salePrice}
+                onChange={(e) => setSalePrice(e.target.value)}
+                placeholder="3500"
+                className="w-full bg-obsidian border border-frost/15 pl-11 pr-4 py-4 text-lg text-frost placeholder:text-frost/25 focus:outline-none focus:border-gold/40 transition-colors"
+              />
+            </div>
+            {salePrice && parseFloat(salePrice) > 0 && (
+              <p className="text-[11px] text-frost/30 mt-2">
+                Compare-at price will be set to Rs {Math.round(parseFloat(salePrice) * 1.25 / 50) * 50} (25% above sale price)
+              </p>
+            )}
+          </div>
+
+          {/* Generate button */}
+          <button
+            onClick={handleGenerate}
+            disabled={generating || !imageDataUrl || !salePrice}
+            className="w-full flex items-center justify-center gap-2.5 bg-gold text-obsidian py-4 text-sm font-medium tracking-widest uppercase transition-all duration-300 hover:bg-gold-light disabled:opacity-40 disabled:cursor-not-allowed"
+          >
+            {generating ? (
+              <>
+                <Loader2 size={18} className="animate-spin" />
+                <span>Analyzing with Gemini AI...</span>
+              </>
+            ) : (
+              <>
+                <Wand2 size={18} />
+                <span>Auto-Generate with Gemini AI</span>
+              </>
+            )}
+          </button>
+        </div>
+      )}
+
+      {/* Step 2: Review & Publish */}
+      {review && (
+        <div className="space-y-5 bg-obsidian-50 border border-frost/8 p-5">
+          {/* Review header */}
+          <div className="flex items-center gap-2 pb-4 border-b border-frost/8">
+            <Check size={16} className="text-[#1f7a4d]" />
+            <span className="text-[11px] tracking-[0.2em] uppercase text-frost/60">AI Generated — Review & Publish</span>
+          </div>
+
+          {/* Image preview */}
+          <div className="flex gap-4">
+            <img src={review.image_url} alt="Product" className="w-24 h-24 object-cover border border-frost/10 shrink-0" />
+            <div className="flex-1 min-w-0">
+              <h3 className="text-sm text-frost font-medium leading-snug">{review.name}</h3>
+              <p className="text-[10px] tracking-wider uppercase text-gold mt-1">
+                {ADMIN_CATEGORIES.find((c) => c.slug === review.category)?.label ?? review.category}
+              </p>
+              <p className="text-xs text-gold mt-1">{formatPrice(parseFloat(review.price_pkr), "PKR")}</p>
+            </div>
+          </div>
+
+          {/* Editable fields */}
+          <div>
+            <Label>Product Name</Label>
+            <Input value={review.name} onChange={(v) => handleEditReview({ name: v })} />
+          </div>
+
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <Label>Category</Label>
+              <Select value={review.category} onChange={(v) => handleEditReview({ category: v })}>
+                {ADMIN_CATEGORIES.map((c) => (
+                  <option key={c.slug} value={c.slug}>{c.label}</option>
+                ))}
+              </Select>
+            </div>
+            <div>
+              <Label>Gender</Label>
+              <Select value={review.gender} onChange={(v) => handleEditReview({ gender: v })}>
+                {ALL_GENDERS.map((g) => (
+                  <option key={g} value={g}>{g === "men" ? "Men" : g === "women" ? "Women" : "Unisex"}</option>
+                ))}
+              </Select>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <Label>Sale Price (PKR)</Label>
+              <Input type="number" value={review.price_pkr} onChange={(v) => handleEditReview({ price_pkr: v })} />
+            </div>
+            <div>
+              <Label>Compare-at (PKR)</Label>
+              <Input type="number" value={review.compare_price_pkr} onChange={(v) => handleEditReview({ compare_price_pkr: v })} />
+            </div>
+          </div>
+
+          <div>
+            <Label>Description</Label>
+            <textarea
+              value={review.description}
+              onChange={(e) => handleEditReview({ description: e.target.value })}
+              rows={3}
+              className="w-full bg-obsidian border border-frost/15 px-4 py-3 text-sm text-frost focus:outline-none focus:border-gold/40 transition-colors resize-none"
+            />
+          </div>
+
+          <div>
+            <Label>Sizes</Label>
+            <div className="flex flex-wrap gap-2">
+              {ALL_SIZES.map((s) => (
+                <button
+                  key={s}
+                  type="button"
+                  onClick={() => handleEditReview({
+                    sizes: review.sizes.includes(s)
+                      ? review.sizes.filter((x) => x !== s)
+                      : [...review.sizes, s],
+                  })}
+                  className={`px-4 py-2.5 text-xs tracking-wider border transition-colors ${
+                    review.sizes.includes(s)
+                      ? "border-frost bg-frost text-obsidian"
+                      : "border-frost/20 text-frost/50 hover:border-frost/50"
+                  }`}
+                >
+                  {s}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div>
+            <Label>Colors (comma-separated)</Label>
+            <Input value={review.colors} onChange={(v) => handleEditReview({ colors: v })} />
+          </div>
+
+          <div>
+            <Label>Badge</Label>
+            <Input value={review.badge} onChange={(v) => handleEditReview({ badge: v })} placeholder="New, Bestseller, Limited" />
+          </div>
+
+          {/* Actions */}
+          <div className="flex gap-3 pt-2">
+            <button
+              onClick={handlePublish}
+              disabled={publishing}
+              className="btn-primary flex-1 !py-4"
+            >
+              {publishing ? (
+                <>
+                  <Loader2 size={16} className="animate-spin" />
+                  <span>Publishing...</span>
+                </>
+              ) : (
+                <>
+                  <Check size={16} /> Publish Product
+                </>
+              )}
+            </button>
+            <button
+              onClick={() => { setReview(null); }}
+              className="btn-ghost !py-4 !px-6"
+            >
+              Start Over
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+/* — Product Form (manual add/edit) — */
 
 function ProductForm({
   product,
@@ -487,7 +837,6 @@ function ProductForm({
     <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center">
       <div className="absolute inset-0 bg-obsidian/85 backdrop-blur-sm" onClick={onClose} />
       <div className="relative z-10 w-full sm:max-w-lg max-h-[92vh] overflow-y-auto bg-obsidian-100 border border-frost/10 rounded-t-2xl sm:rounded-none">
-        {/* Header */}
         <div className="sticky top-0 bg-obsidian-100 border-b border-frost/10 px-5 py-4 flex items-center justify-between z-10">
           <h2 className="font-display text-lg text-frost font-bold">
             {product ? "Edit Product" : "Add New Product"}
@@ -498,7 +847,6 @@ function ProductForm({
         </div>
 
         <form onSubmit={submit} className="p-5 space-y-5">
-          {/* Image */}
           <div>
             <Label>Product Image</Label>
             <div className="flex items-center gap-3">
@@ -536,13 +884,11 @@ function ProductForm({
             </div>
           </div>
 
-          {/* Name */}
           <div>
             <Label>Product Name</Label>
             <Input value={form.name} onChange={(v) => setForm((f) => ({ ...f, name: v }))} placeholder="NEXURA Obsidian Puffer" />
           </div>
 
-          {/* Category + Gender */}
           <div className="grid grid-cols-2 gap-3">
             <div>
               <Label>Category</Label>
@@ -562,7 +908,6 @@ function ProductForm({
             </div>
           </div>
 
-          {/* Prices */}
           <div className="grid grid-cols-2 gap-3">
             <div>
               <Label>Price (PKR)</Label>
@@ -574,7 +919,6 @@ function ProductForm({
             </div>
           </div>
 
-          {/* Sizes */}
           <div>
             <Label>Sizes Available</Label>
             <div className="flex flex-wrap gap-2">
@@ -595,19 +939,16 @@ function ProductForm({
             </div>
           </div>
 
-          {/* Colors */}
           <div>
             <Label>Colors (comma-separated)</Label>
             <Input value={form.colors} onChange={(v) => setForm((f) => ({ ...f, colors: v }))} placeholder="Obsidian, Frost, Charcoal" />
           </div>
 
-          {/* Badge */}
           <div>
             <Label>Badge (optional)</Label>
             <Input value={form.badge} onChange={(v) => setForm((f) => ({ ...f, badge: v }))} placeholder="New, Bestseller, Limited" />
           </div>
 
-          {/* Description */}
           <div>
             <Label>Description</Label>
             <textarea
@@ -619,7 +960,6 @@ function ProductForm({
             />
           </div>
 
-          {/* In stock toggle */}
           <div className="flex items-center justify-between py-2">
             <Label>In Stock</Label>
             <button
@@ -631,7 +971,6 @@ function ProductForm({
             </button>
           </div>
 
-          {/* Actions */}
           <div className="flex gap-3 pt-2">
             <button type="submit" className="btn-primary flex-1 !py-4">
               <Check size={16} /> {product ? "Save Changes" : "Add Product"}
@@ -646,80 +985,126 @@ function ProductForm({
   );
 }
 
+/* — Settings Tab — */
+
 function SettingsTab({ github, onSave }: { github: GitHubSettings; onSave: (g: GitHubSettings) => void }) {
   const [form, setForm] = useState<GitHubSettings>(github);
   const [showToken, setShowToken] = useState(false);
+  const [showGeminiKey, setShowGeminiKey] = useState(false);
+  const [geminiKey, setGeminiKey] = useState(getGeminiKey());
 
   return (
-    <div className="max-w-lg space-y-6">
-      <div>
-        <div className="flex items-center gap-2 mb-2">
-          <Github size={18} className="text-gold" />
-          <h2 className="font-display text-xl text-frost font-bold">GitHub Sync</h2>
+    <div className="max-w-lg space-y-8">
+      {/* GitHub section */}
+      <div className="space-y-6">
+        <div>
+          <div className="flex items-center gap-2 mb-2">
+            <Github size={18} className="text-gold" />
+            <h2 className="font-display text-xl text-frost font-bold">GitHub Sync</h2>
+          </div>
+          <p className="text-sm text-frost/50 leading-relaxed">
+            Connect your GitHub repo to automatically sync product data on every save or delete.
+          </p>
         </div>
-        <p className="text-sm text-frost/50 leading-relaxed">
-          Connect your GitHub repo to automatically sync product data on every save or delete. If no token is set, products are saved to the database only.
-        </p>
+
+        <div className="space-y-4 bg-obsidian-50 border border-frost/8 p-5">
+          <div>
+            <Label>Personal Access Token (PAT)</Label>
+            <div className="relative">
+              <input
+                type={showToken ? "text" : "password"}
+                value={form.token}
+                onChange={(e) => setForm((f) => ({ ...f, token: e.target.value }))}
+                placeholder="ghp_..."
+                className="w-full bg-obsidian border border-frost/15 px-4 py-3 pr-20 text-sm text-frost placeholder:text-frost/25 focus:outline-none focus:border-gold/40 transition-colors"
+              />
+              <button
+                type="button"
+                onClick={() => setShowToken((v) => !v)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] tracking-wider uppercase text-frost/40 hover:text-frost transition-colors"
+              >
+                {showToken ? "Hide" : "Show"}
+              </button>
+            </div>
+          </div>
+
+          <div>
+            <Label>Repo Owner</Label>
+            <Input value={form.owner} onChange={(v) => setForm((f) => ({ ...f, owner: v }))} placeholder="alezabatol49" />
+          </div>
+          <div>
+            <Label>Repo Name</Label>
+            <Input value={form.repo} onChange={(v) => setForm((f) => ({ ...f, repo: v }))} placeholder="nexura" />
+          </div>
+          <div>
+            <Label>Branch</Label>
+            <Input value={form.branch} onChange={(v) => setForm((f) => ({ ...f, branch: v }))} placeholder="main" />
+          </div>
+          <div>
+            <Label>File Path</Label>
+            <Input value={form.path} onChange={(v) => setForm((f) => ({ ...f, path: v }))} placeholder="src/data/products.json" />
+          </div>
+
+          <div className="flex items-center gap-2 pt-2">
+            <span className={`w-2 h-2 rounded-full ${hasGitHubToken(form) ? "bg-[#1f7a4d]" : "bg-frost/20"}`} />
+            <span className="text-[11px] tracking-wider text-frost/50">
+              {hasGitHubToken(form) ? "Sync active" : "No token — saving to database only"}
+            </span>
+          </div>
+
+          <button onClick={() => onSave(form)} className="btn-primary w-full !py-4 mt-2">
+            <Check size={16} /> Save GitHub Settings
+          </button>
+        </div>
       </div>
 
-      <div className="space-y-4 bg-obsidian-50 border border-frost/8 p-5">
-        {/* Token */}
+      {/* Gemini section */}
+      <div className="space-y-6">
         <div>
-          <Label>Personal Access Token (PAT)</Label>
-          <div className="relative">
-            <input
-              type={showToken ? "text" : "password"}
-              value={form.token}
-              onChange={(e) => setForm((f) => ({ ...f, token: e.target.value }))}
-              placeholder="ghp_..."
-              className="w-full bg-obsidian border border-frost/15 px-4 py-3 pr-20 text-sm text-frost placeholder:text-frost/25 focus:outline-none focus:border-gold/40 transition-colors"
-            />
-            <button
-              type="button"
-              onClick={() => setShowToken((v) => !v)}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] tracking-wider uppercase text-frost/40 hover:text-frost transition-colors"
-            >
-              {showToken ? "Hide" : "Show"}
-            </button>
+          <div className="flex items-center gap-2 mb-2">
+            <Sparkles size={18} className="text-gold" />
+            <h2 className="font-display text-xl text-frost font-bold">Gemini AI</h2>
           </div>
-          <p className="text-[10px] text-frost/30 mt-1.5">Needs `repo` scope. Stored locally in your browser only.</p>
+          <p className="text-sm text-frost/50 leading-relaxed">
+            API key for the AI Product Publisher. Pre-configured and active by default.
+          </p>
         </div>
 
-        {/* Owner */}
-        <div>
-          <Label>Repo Owner</Label>
-          <Input value={form.owner} onChange={(v) => setForm((f) => ({ ...f, owner: v }))} placeholder="alezabatol49" />
-        </div>
+        <div className="space-y-4 bg-obsidian-50 border border-frost/8 p-5">
+          <div>
+            <Label>API Key</Label>
+            <div className="relative">
+              <input
+                type={showGeminiKey ? "text" : "password"}
+                value={geminiKey}
+                onChange={(e) => setGeminiKey(e.target.value)}
+                placeholder="Gemini API key..."
+                className="w-full bg-obsidian border border-frost/15 px-4 py-3 pr-20 text-sm text-frost placeholder:text-frost/25 focus:outline-none focus:border-gold/40 transition-colors"
+              />
+              <button
+                type="button"
+                onClick={() => setShowGeminiKey((v) => !v)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] tracking-wider uppercase text-frost/40 hover:text-frost transition-colors"
+              >
+                {showGeminiKey ? "Hide" : "Show"}
+              </button>
+            </div>
+          </div>
 
-        {/* Repo */}
-        <div>
-          <Label>Repo Name</Label>
-          <Input value={form.repo} onChange={(v) => setForm((f) => ({ ...f, repo: v }))} placeholder="nexura" />
-        </div>
+          <div className="flex items-center gap-2 pt-2">
+            <span className={`w-2 h-2 rounded-full ${isGeminiConfigured() ? "bg-[#1f7a4d]" : "bg-red-400"}`} />
+            <span className="text-[11px] tracking-wider text-frost/50">
+              {isGeminiConfigured() ? "Gemini Flash connected and active" : "Not configured"}
+            </span>
+          </div>
 
-        {/* Branch */}
-        <div>
-          <Label>Branch</Label>
-          <Input value={form.branch} onChange={(v) => setForm((f) => ({ ...f, branch: v }))} placeholder="main" />
+          <button
+            onClick={() => { saveGeminiKey(geminiKey); }}
+            className="btn-primary w-full !py-4 mt-2"
+          >
+            <Check size={16} /> Save Gemini Key
+          </button>
         </div>
-
-        {/* File path */}
-        <div>
-          <Label>File Path</Label>
-          <Input value={form.path} onChange={(v) => setForm((f) => ({ ...f, path: v }))} placeholder="src/data/products.json" />
-        </div>
-
-        {/* Status */}
-        <div className="flex items-center gap-2 pt-2">
-          <span className={`w-2 h-2 rounded-full ${hasGitHubToken(form) ? "bg-[#1f7a4d]" : "bg-frost/20"}`} />
-          <span className="text-[11px] tracking-wider text-frost/50">
-            {hasGitHubToken(form) ? "Sync active — products will push to GitHub on save/delete" : "No token — saving to database only"}
-          </span>
-        </div>
-
-        <button onClick={() => onSave(form)} className="btn-primary w-full !py-4 mt-2">
-          <Check size={16} /> Save Settings
-        </button>
       </div>
     </div>
   );
