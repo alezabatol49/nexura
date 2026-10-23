@@ -14,14 +14,20 @@ export default function Header() {
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
-  const scrollTo = (slug: string) => {
+  const handleFilterClick = (slug: string) => {
     setMobileOpen(false);
     setCatOpen(false);
-    const el = document.getElementById(`catalog`);
+
+    // کیٹلاگ سیکشن تک ہموار سکرول
+    const el = document.getElementById("catalog");
     if (el) {
       el.scrollIntoView({ behavior: "smooth" });
-      window.dispatchEvent(new CustomEvent("nexura:filter", { detail: slug }));
     }
+
+    // کیٹلاگ کو فوری فلٹر ایونٹ بھیجنا
+    window.dispatchEvent(
+      new CustomEvent("nexura:filter", { detail: slug })
+    );
   };
 
   return (
@@ -31,10 +37,11 @@ export default function Header() {
       }`}
     >
       <div className="flex items-center justify-between gap-4 px-5 lg:px-10 py-4 lg:py-5">
-        {/* Left: logo */}
+        {/* Left: Logo */}
         <div className="flex items-center gap-3 shrink-0">
           <button
-            className="lg:hidden text-frost"
+            type="button"
+            className="lg:hidden text-frost cursor-pointer"
             onClick={() => setMobileOpen(true)}
             aria-label="Open menu"
           >
@@ -47,35 +54,39 @@ export default function Header() {
           </a>
         </div>
 
-        {/* Center: nav (desktop) */}
+        {/* Center: Desktop Navigation (Kids, Women, Men) */}
         <nav className="hidden lg:flex items-center gap-7">
-          {CATEGORIES.slice(1, 5).map((c) => (
+          {CATEGORIES.slice(1, 4).map((c) => (
             <button
               key={c.slug}
-              onClick={() => scrollTo(c.slug)}
-              className="text-[11px] tracking-[0.2em] uppercase text-frost/70 hover:text-frost transition-colors whitespace-nowrap"
+              type="button"
+              onClick={() => handleFilterClick(c.slug)}
+              className="text-[11px] tracking-[0.2em] uppercase text-frost/80 hover:text-frost font-medium transition-colors whitespace-nowrap cursor-pointer py-1"
             >
               {c.label}
             </button>
           ))}
-          {/* Categories dropdown */}
+
+          {/* More Categories Dropdown */}
           <div className="relative">
             <button
+              type="button"
               onClick={() => setCatOpen((v) => !v)}
-              className="flex items-center gap-1 text-[11px] tracking-[0.2em] uppercase text-frost/70 hover:text-frost transition-colors whitespace-nowrap"
+              className="flex items-center gap-1.5 text-[11px] tracking-[0.2em] uppercase text-frost/80 hover:text-frost font-medium transition-colors whitespace-nowrap cursor-pointer py-1"
             >
               More
-              <ChevronDown size={12} className={`transition-transform duration-300 ${catOpen ? "rotate-180" : ""}`} />
+              <ChevronDown size={13} className={`transition-transform duration-300 ${catOpen ? "rotate-180" : ""}`} />
             </button>
             {catOpen && (
               <>
                 <div className="fixed inset-0 z-40" onClick={() => setCatOpen(false)} />
-                <div className="absolute left-1/2 -translate-x-1/2 top-full mt-3 z-50 w-52 bg-obsidian-50 border border-frost/10 py-2 animate-fade-in">
-                  {CATEGORIES.slice(5).map((c) => (
+                <div className="absolute left-1/2 -translate-x-1/2 top-full mt-3 z-50 w-56 bg-[#0e1015] border border-frost/20 py-2 shadow-2xl rounded-sm">
+                  {CATEGORIES.slice(4).map((c) => (
                     <button
                       key={c.slug}
-                      onClick={() => scrollTo(c.slug)}
-                      className="block w-full text-left px-4 py-2.5 text-[11px] tracking-[0.2em] uppercase text-frost/70 hover:text-gold hover:bg-frost/5 transition-colors"
+                      type="button"
+                      onClick={() => handleFilterClick(c.slug)}
+                      className="block w-full text-left px-5 py-2.5 text-[11px] tracking-[0.2em] uppercase text-frost/70 hover:text-gold hover:bg-white/5 transition-colors cursor-pointer"
                     >
                       {c.label}
                     </button>
@@ -86,11 +97,12 @@ export default function Header() {
           </div>
         </nav>
 
-        {/* Right: shop all + currency */}
+        {/* Right: Shop All + Currency */}
         <div className="flex items-center gap-4 lg:gap-5 shrink-0">
           <button
-            onClick={() => scrollTo("all")}
-            className="hidden lg:block text-[11px] tracking-[0.2em] uppercase text-frost/70 hover:text-frost transition-colors whitespace-nowrap"
+            type="button"
+            onClick={() => handleFilterClick("all")}
+            className="hidden lg:block text-[11px] tracking-[0.2em] uppercase text-frost/80 hover:text-frost transition-colors whitespace-nowrap cursor-pointer"
           >
             Shop All
           </button>
@@ -98,14 +110,14 @@ export default function Header() {
         </div>
       </div>
 
-      {/* Mobile drawer */}
+      {/* Mobile Drawer */}
       {mobileOpen && (
         <div className="fixed inset-0 z-50 lg:hidden">
           <div className="absolute inset-0 bg-obsidian/80 backdrop-blur-sm" onClick={() => setMobileOpen(false)} />
-          <div className="absolute left-0 top-0 h-full w-72 bg-obsidian-100 border-r border-frost/10 p-6 animate-slide-in">
+          <div className="absolute left-0 top-0 h-full w-72 bg-[#0e1015] border-r border-frost/10 p-6">
             <div className="flex items-center justify-between mb-10">
               <span className="font-display text-xl tracking-[0.3em] text-frost font-bold pl-[0.3em]">NEXURA</span>
-              <button onClick={() => setMobileOpen(false)} className="text-frost/70">
+              <button type="button" onClick={() => setMobileOpen(false)} className="text-frost/70 cursor-pointer">
                 <X size={20} />
               </button>
             </div>
@@ -113,8 +125,9 @@ export default function Header() {
               {CATEGORIES.map((c) => (
                 <button
                   key={c.slug}
-                  onClick={() => scrollTo(c.slug)}
-                  className="text-left text-xs tracking-[0.2em] uppercase text-frost/70 hover:text-gold transition-colors"
+                  type="button"
+                  onClick={() => handleFilterClick(c.slug)}
+                  className="text-left text-xs tracking-[0.2em] uppercase text-frost/70 hover:text-gold transition-colors cursor-pointer py-1"
                 >
                   {c.label}
                 </button>
