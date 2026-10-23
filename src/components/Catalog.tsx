@@ -11,6 +11,7 @@ export default function Catalog() {
   const [active, setActive] = useState<string>("all");
   const [quickView, setQuickView] = useState<Product | null>(null);
 
+  // 1. Fetch all products (up to 2500)
   useEffect(() => {
     let cancelled = false;
     (async () => {
@@ -19,7 +20,7 @@ export default function Catalog() {
         .from("products")
         .select("*")
         .order("created_at", { ascending: false })
-        .limit(2000);
+        .limit(2500);
 
       if (cancelled) return;
       if (error) {
@@ -34,30 +35,75 @@ export default function Catalog() {
     };
   }, []);
 
-  // Listen for filter events from header
+  // 2. Listen for filter events dispatched by Header
   useEffect(() => {
     const handler = (e: Event) => {
       const slug = (e as CustomEvent).detail as string;
-      if (slug) setActive(slug);
+      if (slug) {
+        setActive(slug.toLowerCase().trim());
+      }
     };
     window.addEventListener("nexura:filter", handler);
     return () => window.removeEventListener("nexura:filter", handler);
   }, []);
 
-  const filtered = useMemo(
-    () =>
-      active === "all"
-        ? products
-        : products.filter(
-            (p) =>
-              p.category === active ||
-              p.gender === active ||
-              (active === "kids" && (p.category === "kids" || p.gender === "kids")) ||
-              (active === "women" && (p.category === "women" || p.gender === "women")) ||
-              (active === "men" && (p.category === "men" || p.gender === "men"))
-          ),
-    [products, active]
-  );
+  // 3. Bulletproof Filter Logic (Category + Gender + Title fallback)
+  const filtered = useMemo(() => {
+    if (!active || active === "all") return products;
+
+    const target = active.toLowerCase().trim();
+
+    return products.filter((p) => {
+      const cat = (p.category || "").toLowerCase();
+      const gen = (p.gender || "").toLowerCase();
+      const title = (p.name || (p as any).title || "").toLowerCase();
+
+      // Kids & Baby Match
+      if (target === "kids" || target.includes("kid") || target.includes("baby")) {
+        return (
+          cat === "kids" ||
+          gen === "kids" ||
+          cat.includes("kid") ||
+          cat.includes("baby") ||
+          title.includes("baby") ||
+          title.includes("kid") ||
+          title.includes("romper") ||
+          title.includes("nest")
+        );
+      }
+
+      // Women / Girls Match
+      if (target === "women" || target.includes("women") || target.includes("girl")) {
+        return (
+          cat === "women" ||
+          gen === "women" ||
+          cat.includes("women") ||
+          cat.includes("girl") ||
+          title.includes("women") ||
+          title.includes("girl") ||
+          title.includes("kurti") ||
+          title.includes("shawl") ||
+          title.includes("khaddar")
+        );
+      }
+
+      // Men Collection Match
+      if (target === "men" || target.includes("men")) {
+        // Women اور Kids کو خارج کریں تاکہ صرف خالص Men نظر آئے
+        const isNotFemale = !cat.includes("women") && !gen.includes("women") && !title.includes("women") && !title.includes("girl");
+        const isNotBaby = !cat.includes("kid") && !gen.includes("kid") && !title.includes("baby");
+
+        return (
+          (cat === "men" || gen === "men" || title.includes("men ") || title.startsWith("men")) &&
+          isNotFemale &&
+          isNotBaby
+        );
+      }
+
+      // Other specific categories (Puffer Jackets, Hoodies, etc.)
+      return cat.includes(target) || title.includes(target);
+    });
+  }, [products, active]);
 
   return (
     <section id="catalog" className="px-5 lg:px-10 py-20 lg:py-28">
@@ -66,26 +112,39 @@ export default function Catalog() {
         <p className="section-label mb-4">The Collection</p>
         <h2 className="font-display text-3xl md:text-5xl text-frost font-bold">Family & Winter Garments</h2>
         <p className="mt-4 text-sm text-frost/50 max-w-md mx-auto">
-          Premium collection engineered for everyday comfort and warmth. Select your fit and order via WhatsApp.
+          Over 1,500+ premium pieces engineered for everyday comfort. Select your category and order via WhatsApp.
         </p>
       </div>
 
-      {/* Filters */}
+      {/* Category Pills / Filter Buttons */}
       <div className="flex flex-wrap items-center justify-center gap-2 md:gap-3 mb-12">
-        {CATEGORIES.map((c) => (
-          <button
-            key={c.slug}
-            onClick={() => setActive(c.slug)}
-            className={`text-[10px] md:text-[11px] tracking-[0.2em] uppercase px-4 py-2.5 border transition-all duration-300 ${
-              active === c.slug
-                ? "border-frost bg-frost text-obsidian font-semibold"
-                : "border-frost/15 text-frost/60 hover:border-frost/40 hover:text-frost"
-            }`}
-          >
-            {c.label}
-          </button>
-        ))}
+        {CATEGORIES.map((c) => {
+          const isSelected = active === c.slug;
+          return (
+            <button
+              key={c.slug}
+              type="button"
+              onClick={() => setActive(c.slug)}
+              className={`text-[10px] md:text-[11px] tracking-[0.2em] uppercase px-4 py-2.5 border transition-all duration-300 cursor-pointer ${
+                isSelected
+                  ? "border-frost bg-frost text-obsidian font-bold shadow-lg"
+                  : "border-frost/15 text-frost/70 hover:border-frost/40 hover:text-frost bg-white/[0.02]"
+              }`}
+            >
+              {c.label}
+            </button>
+          );
+        })}
       </div>
+
+      {/* Products Count Indicator */}
+      {!loading && !error && (
+        <div className="text-center mb-8">
+          <span className="text-[11px] uppercase tracking-[0.2em] text-frost/40">
+            Showing {filtered.length} items
+          </span>
+        </div>
+      )}
 
       {/* Grid */}
       {loading ? (
@@ -104,7 +163,7 @@ export default function Catalog() {
         </div>
       ) : filtered.length === 0 ? (
         <div className="text-center py-16">
-          <p className="text-frost/50 text-sm">No items in this category yet.</p>
+          <p className="text-frost/50 text-sm">No items found in this category.</p>
         </div>
       ) : (
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-x-5 gap-y-12">
