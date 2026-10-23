@@ -18,7 +18,9 @@ export default function Catalog() {
       const { data, error } = await supabase
         .from("products")
         .select("*")
-        .order("created_at", { ascending: true });
+        .order("created_at", { ascending: false })
+        .limit(2000);
+
       if (cancelled) return;
       if (error) {
         setError(error.message);
@@ -43,7 +45,17 @@ export default function Catalog() {
   }, []);
 
   const filtered = useMemo(
-    () => (active === "all" ? products : products.filter((p) => p.category === active)),
+    () =>
+      active === "all"
+        ? products
+        : products.filter(
+            (p) =>
+              p.category === active ||
+              p.gender === active ||
+              (active === "kids" && (p.category === "kids" || p.gender === "kids")) ||
+              (active === "women" && (p.category === "women" || p.gender === "women")) ||
+              (active === "men" && (p.category === "men" || p.gender === "men"))
+          ),
     [products, active]
   );
 
@@ -52,9 +64,9 @@ export default function Catalog() {
       {/* Section header */}
       <div className="text-center mb-14">
         <p className="section-label mb-4">The Collection</p>
-        <h2 className="font-display text-3xl md:text-5xl text-frost font-bold">Winter Garments</h2>
+        <h2 className="font-display text-3xl md:text-5xl text-frost font-bold">Family & Winter Garments</h2>
         <p className="mt-4 text-sm text-frost/50 max-w-md mx-auto">
-          Every piece engineered for sub-zero conditions. Select your fit and order in one click.
+          Premium collection engineered for everyday comfort and warmth. Select your fit and order via WhatsApp.
         </p>
       </div>
 
@@ -66,7 +78,7 @@ export default function Catalog() {
             onClick={() => setActive(c.slug)}
             className={`text-[10px] md:text-[11px] tracking-[0.2em] uppercase px-4 py-2.5 border transition-all duration-300 ${
               active === c.slug
-                ? "border-frost bg-frost text-obsidian"
+                ? "border-frost bg-frost text-obsidian font-semibold"
                 : "border-frost/15 text-frost/60 hover:border-frost/40 hover:text-frost"
             }`}
           >
