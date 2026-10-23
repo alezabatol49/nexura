@@ -17,6 +17,9 @@ export type Product = {
 };
 
 export const ADMIN_CATEGORIES = [
+  { slug: "kids", label: "Kids & Baby" },
+  { slug: "women", label: "Women / Girls" },
+  { slug: "men", label: "Men Collection" },
   { slug: "puffer-jackets", label: "Puffer Jackets" },
   { slug: "arctic-parkas", label: "Arctic Parkas" },
   { slug: "hoodies", label: "Heavyweight Hoodies" },
@@ -26,8 +29,8 @@ export const ADMIN_CATEGORIES = [
   { slug: "balaclavas", label: "Balaclavas" },
 ] as const;
 
-export const ALL_SIZES = ["XS", "S", "M", "L", "XL", "XXL"] as const;
-export const ALL_GENDERS = ["men", "women", "unisex"] as const;
+export const ALL_SIZES = ["XS", "S", "M", "L", "XL", "XXL", "0-3M", "3-6M", "6-12M", "1-2Y", "2-4Y"] as const;
+export const ALL_GENDERS = ["men", "women", "kids", "unisex"] as const;
 export const ADMIN_PIN = "9404";
 
 export type CurrencyCode = "PKR" | "USD" | "AED" | "GBP";
@@ -50,7 +53,10 @@ export const WHATSAPP_NUMBER = "923219404812";
 export const WHATSAPP_LINK = `https://wa.me/${WHATSAPP_NUMBER}`;
 
 export const CATEGORIES = [
-  { slug: "all", label: "All", icon: "All" },
+  { slug: "all", label: "All Collections", icon: "All" },
+  { slug: "kids", label: "Kids & Baby", icon: "Kids" },
+  { slug: "women", label: "Women / Girls", icon: "Women" },
+  { slug: "men", label: "Men Collection", icon: "Men" },
   { slug: "puffer-jackets", label: "Puffer Jackets", icon: "Puffer" },
   { slug: "arctic-parkas", label: "Arctic Parkas", icon: "Parka" },
   { slug: "hoodies", label: "Heavyweight Hoodies", icon: "Hoodie" },
