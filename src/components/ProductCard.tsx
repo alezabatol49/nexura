@@ -8,56 +8,40 @@ type Props = {
   onQuickView: (p: Product) => void;
 };
 
-// معیاری فال بیک تصویر اگر مارکز کا اصل لنک سست یا خراب ہو
-const FALLBACK_IMAGE =
-  "https://images.unsplash.com/photo-1591047139829-d91aecb6caea?w=600&auto=format&fit=crop&q=80";
-
 export default function ProductCard({ product, onQuickView }: Props) {
   const { currency } = useCurrency();
   const [size, setSize] = useState(product.sizes?.[0] ?? "M");
   const [color, setColor] = useState(product.colors?.[0] ?? "Standard");
-  const [imgSrc, setImgSrc] = useState(product.image_url || FALLBACK_IMAGE);
 
   const waLink = buildWhatsAppOrderLink({ product, size, color, currency, method: "WhatsApp" });
   const codLink = buildWhatsAppOrderLink({ product, size, color, currency, method: "COD" });
 
-  // جینڈر کا درست اور کلین لیبل
   const getGenderLabel = () => {
-    const g = (product.gender || "").toLowerCase();
     const c = (product.category || "").toLowerCase();
-    if (g === "kids" || c === "kids" || product.name.toLowerCase().includes("baby")) return "Kids & Baby";
-    if (g === "women" || c === "women") return "Womens";
-    if (g === "men" || c === "men") return "Mens";
-    return "Unisex";
+    if (c === "kids") return "Kids & Baby";
+    if (c === "women") return "Womens";
+    if (c === "men") return "Mens";
+    return "Collection";
   };
 
   return (
-    <div className="group flex flex-col h-full justify-between bg-white/[0.01] p-2 rounded-sm border border-frost/5 hover:border-frost/20 transition-all duration-300">
-      {/* Top Section: Image & Badges */}
+    <div className="group flex flex-col h-full justify-between bg-white/[0.01] p-2.5 rounded border border-frost/5 hover:border-frost/20 transition-all duration-300">
       <div>
-        <div className="relative img-zoom bg-[#12141a] aspect-[3/4] mb-4 overflow-hidden rounded-sm flex items-center justify-center">
+        {/* Product Image Frame */}
+        <div className="relative img-zoom bg-[#14161d] aspect-[3/4] mb-3 overflow-hidden rounded flex items-center justify-center">
           <img
-            src={imgSrc}
+            src={product.image_url}
             alt={product.name}
             loading="lazy"
-            onError={() => setImgSrc(FALLBACK_IMAGE)}
             className="h-full w-full object-cover object-top transition-transform duration-500 group-hover:scale-105"
           />
 
-          {/* Badge */}
           {product.badge && (
             <span className="absolute top-3 left-3 bg-obsidian/90 text-gold text-[9px] tracking-[0.2em] uppercase px-2.5 py-1 backdrop-blur-sm border border-gold/20">
               {product.badge}
             </span>
           )}
 
-          {!product.in_stock && (
-            <span className="absolute top-3 right-3 bg-red-950/90 text-red-300 text-[9px] tracking-[0.2em] uppercase px-2.5 py-1 backdrop-blur-sm">
-              Sold Out
-            </span>
-          )}
-
-          {/* Quick view button */}
           <button
             type="button"
             onClick={() => onQuickView(product)}
@@ -86,7 +70,6 @@ export default function ProductCard({ product, onQuickView }: Props) {
             </span>
           </div>
 
-          {/* Title constrained to 2 lines for uniform grid */}
           <h3
             className="text-xs md:text-sm text-frost/90 font-normal leading-snug line-clamp-2 min-h-[2.5rem]"
             title={product.name}
@@ -94,7 +77,6 @@ export default function ProductCard({ product, onQuickView }: Props) {
             {product.name}
           </h3>
 
-          {/* Size selector */}
           {product.sizes && product.sizes.length > 1 && (
             <div className="flex flex-wrap gap-1 mt-1">
               {product.sizes.slice(0, 5).map((s) => (
@@ -116,7 +98,7 @@ export default function ProductCard({ product, onQuickView }: Props) {
         </div>
       </div>
 
-      {/* Actions (Always aligned at the bottom) */}
+      {/* Buttons */}
       <div className="flex items-center gap-2 mt-4 pt-2 border-t border-frost/5">
         <a
           href={waLink}
