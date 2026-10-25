@@ -35,11 +35,20 @@ export default function App() {
           <Editorial />
         </main>
 
-        {/* Footer with Terms Trigger */}
-        <Footer onOpenTerms={() => setShowTerms(true)} />
+        {/* Footer بغیر کسی غیر ضروری prop کے */}
+        <Footer />
 
         {/* WhatsApp Floating Action */}
         <FloatingWhatsApp />
+
+        {/* Floating Terms Button */}
+        <button
+          type="button"
+          onClick={() => setShowTerms(true)}
+          className="fixed bottom-4 left-4 z-40 bg-neutral-900/90 border border-[#c5a880]/40 text-[#c5a880] text-[10px] tracking-wider uppercase px-3 py-1.5 rounded-full shadow-lg hover:bg-[#c5a880] hover:text-black transition-all cursor-pointer"
+        >
+          📜 Terms & Policy
+        </button>
 
         {/* Terms & Conditions / Store Policy Modal */}
         {showTerms && (
