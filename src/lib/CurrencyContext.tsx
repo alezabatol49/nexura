@@ -8,12 +8,15 @@ type CurrencyContextValue = {
 
 const CurrencyContext = createContext<CurrencyContextValue | undefined>(undefined);
 
-const STORAGE_KEY = "nexura-currency";
+const STORAGE_KEY = "nexura-currency-v2"; // v2 کرنے سے پرانی USD کیشے ختم ہو جائے گی
 
 export function CurrencyProvider({ children }: { children: ReactNode }) {
   const [currency, setCurrencyState] = useState<CurrencyCode>(() => {
+    // پرانی کیشے صاف کر کے ڈیفالٹ PKR رکھیں
     const stored = localStorage.getItem(STORAGE_KEY) as CurrencyCode | null;
-    if (stored && CURRENCIES[stored]) return stored;
+    if (stored && CURRENCIES[stored]) {
+      return stored;
+    }
     return "PKR";
   });
 
