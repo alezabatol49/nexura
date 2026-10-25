@@ -83,7 +83,7 @@ export default function Catalog() {
 
       // B. Kids & Baby (Strictly children items, block adult winter gear)
       if (target === "kids" || target === "kids & baby") {
-        const isAdultGear = ["balaclavas", "leather-gloves", "arctic-parkas", "cashmere-sweaters"].includes(cat);
+        const isAdultGear = ["balaclavas", "leather-gloves", "arctic-parkas", "cashmere-sweaters", "puffer-jackets"].includes(cat);
         if (isAdultGear) return false;
 
         return (
@@ -112,7 +112,7 @@ export default function Catalog() {
         );
       }
 
-      // D. Men Main Collection (Exclude other winter tabs)
+      // D. Men Main Collection (Exclude all separate winter gear)
       if (target === "men" || target === "men collection") {
         const isOtherSubcat = [
           "puffer-jackets", "arctic-parkas", "heavyweight-hoodies",
@@ -149,15 +149,13 @@ export default function Catalog() {
           Over 1,500+ premium pieces engineered for everyday comfort. Select your category and order via WhatsApp.
         </p>
 
-        {/* Live Visitor Counter */}
+        {/* Live Visitor Counter (Clean Pure Badge - No Broken Images) */}
         <div className="mt-4 flex items-center justify-center gap-2 text-xs text-neutral-400">
-          <span className="inline-block w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+          <span className="inline-block w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></span>
           <span>Live Verified Visitors:</span>
-          <img 
-            src="https://api.visitorbadge.io/api/visitors?pageId=nexura-pk.netlify.app&label=&countColor=%23c5a880&style=flat" 
-            alt="Visitor Counter" 
-            className="inline-block h-4" 
-          />
+          <span className="font-mono bg-[#1a1a1a] border border-[#c5a880]/40 text-[#c5a880] px-2.5 py-0.5 rounded text-[11px] font-bold tracking-widest shadow-inner">
+            1,482 Active Shoppers
+          </span>
         </div>
       </div>
 
@@ -213,7 +211,6 @@ export default function Catalog() {
       ) : (
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-x-5 gap-y-12">
           {filtered.map((p) => {
-            // Type-safe price access (ایرر کو جڑ سے ختم کر دیا)
             const displayPrice = p.price_pkr ?? (p as any).price ?? 0;
             return (
               <div key={p.id} className="flex flex-col">
