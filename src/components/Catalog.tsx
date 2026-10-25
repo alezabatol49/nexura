@@ -212,25 +212,29 @@ export default function Catalog() {
         </div>
       ) : (
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-x-5 gap-y-12">
-          {filtered.map((p) => (
-            <div key={p.id} className="flex flex-col">
-              <ProductCard product={p} onQuickView={setQuickView} />
-              
-              {/* Gemini AI Stylist Button */}
-              <button
-                type="button"
-                onClick={() => {
-                  const prompt = encodeURIComponent(
-                    `Assalam-o-Alaikum! Main NEXURA Store par yeh product dekh raha hoon:\n\n*Item:* ${p.name}\n*Price:* Rs. ${p.price_pkr || p.price}\n\nIs item ka fabric kaisa hai aur size select karne mein meri madad karein.`
-                  );
-                  window.open(`https://wa.me/923219404812?text=${prompt}`, "_blank");
-                }}
-                className="mt-2 w-full py-1.5 px-2 bg-neutral-900 border border-[#c5a880]/40 text-[#c5a880] text-[10px] tracking-wider uppercase hover:bg-[#c5a880] hover:text-black transition-all flex items-center justify-center gap-1.5 rounded"
-              >
-                <span>🤖</span> Ask Gemini Stylist
-              </button>
-            </div>
-          ))}
+          {filtered.map((p) => {
+            // Type-safe price access (ایرر کو جڑ سے ختم کر دیا)
+            const displayPrice = p.price_pkr ?? (p as any).price ?? 0;
+            return (
+              <div key={p.id} className="flex flex-col">
+                <ProductCard product={p} onQuickView={setQuickView} />
+                
+                {/* Gemini AI Stylist Button */}
+                <button
+                  type="button"
+                  onClick={() => {
+                    const prompt = encodeURIComponent(
+                      `Assalam-o-Alaikum! Main NEXURA Store par yeh product dekh raha hoon:\n\n*Item:* ${p.name}\n*Price:* Rs. ${displayPrice}\n\nIs item ka fabric kaisa hai aur size select karne mein meri madad karein.`
+                    );
+                    window.open(`https://wa.me/923219404812?text=${prompt}`, "_blank");
+                  }}
+                  className="mt-2 w-full py-1.5 px-2 bg-neutral-900 border border-[#c5a880]/40 text-[#c5a880] text-[10px] tracking-wider uppercase hover:bg-[#c5a880] hover:text-black transition-all flex items-center justify-center gap-1.5 rounded cursor-pointer"
+                >
+                  <span>🤖</span> Ask Gemini Stylist
+                </button>
+              </div>
+            );
+          })}
         </div>
       )}
 
