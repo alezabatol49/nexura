@@ -39,7 +39,7 @@ export type CurrencyInfo = {
   code: CurrencyCode;
   symbol: string;
   label: string;
-  rate: number; // multiplier from PKR
+  rate: number;
 };
 
 export const CURRENCIES: Record<CurrencyCode, CurrencyInfo> = {
@@ -105,6 +105,7 @@ export function buildWhatsAppOrderLink(opts: {
   const text = encodeURIComponent(lines.join("\n"));
   return `${WHATSAPP_LINK}?text=${text}`;
 }
+
 export interface CurrencyContextValue {
   currency: CurrencyCode;
   setCurrency: (c: CurrencyCode) => void;
