@@ -1,82 +1,57 @@
-import { Instagram, Facebook, Twitter, Mail } from "lucide-react";
-import { WHATSAPP_LINK, WHATSAPP_NUMBER } from "../lib/types";
+import React from "react";
 
 export default function Footer() {
   return (
-    <footer className="bg-obsidian-50 border-t border-frost/10 px-5 lg:px-10 pt-20 pb-10">
-      <div className="grid md:grid-cols-4 gap-12 mb-16">
-        {/* Brand */}
-        <div className="md:col-span-1">
-          <h3 className="font-display text-2xl tracking-[0.3em] text-frost font-bold pl-[0.3em] mb-5">NEXURA</h3>
-          <p className="text-sm text-frost/50 leading-relaxed">
-            Ultra-luxury winter outerwear and garments. Engineered for the extreme cold, crafted for those who demand more.
+    <footer className="bg-[#0b0b0b] border-t border-[#c5a880]/20 text-frost/80 pt-16 pb-12 px-6 lg:px-16">
+      <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-4 gap-10 pb-12 border-b border-white/10">
+        {/* Col 1: Brand Info */}
+        <div className="space-y-4">
+          <h2 className="font-display text-2xl tracking-[0.25em] text-[#c5a880] font-bold">NEXURA</h2>
+          <p className="text-xs text-frost/60 leading-relaxed font-light">
+            Pakistan's ultra-luxury outerwear & garments brand. Designed for cold comfort, refined styling, and unmatched longevity.
           </p>
+          <div className="text-[11px] text-[#c5a880] font-mono">
+            Direct Support: 0321-9404812
+          </div>
         </div>
 
-        {/* Shop */}
-        <div>
-          <h4 className="text-[10px] tracking-[0.3em] uppercase text-frost/40 mb-5">Shop</h4>
-          <ul className="flex flex-col gap-3">
-            {["Puffer Jackets", "Arctic Parkas", "Heavyweight Hoodies", "Cashmere Sweaters", "Accessories"].map((l) => (
-              <li key={l}>
-                <a href="#catalog" className="text-sm text-frost/60 hover:text-gold transition-colors">{l}</a>
-              </li>
-            ))}
+        {/* Col 2: Fast Navigation */}
+        <div className="space-y-3">
+          <h3 className="text-xs uppercase tracking-[0.2em] text-[#c5a880] font-semibold">Collections</h3>
+          <ul className="text-xs space-y-2 text-frost/60">
+            <li><a href="#catalog" className="hover:text-[#c5a880] transition-colors">Arctic Parkas & Puffer</a></li>
+            <li><a href="#catalog" className="hover:text-[#c5a880] transition-colors">Heavyweight Hoodies</a></li>
+            <li><a href="#catalog" className="hover:text-[#c5a880] transition-colors">Cashmere Sweaters</a></li>
+            <li><a href="#catalog" className="hover:text-[#c5a880] transition-colors">Balaclavas & Gloves</a></li>
+            <li><a href="#catalog" className="hover:text-[#c5a880] transition-colors">Family & Kids Winterwear</a></li>
           </ul>
         </div>
 
-        {/* Help */}
-        <div>
-          <h4 className="text-[10px] tracking-[0.3em] uppercase text-frost/40 mb-5">Help</h4>
-          <ul className="flex flex-col gap-3">
-            <li><a href={WHATSAPP_LINK} target="_blank" rel="noopener noreferrer" className="text-sm text-frost/60 hover:text-gold transition-colors">WhatsApp Orders</a></li>
-            <li><span className="text-sm text-frost/60">Cash on Delivery</span></li>
-            <li><span className="text-sm text-frost/60">Shipping & Returns</span></li>
-            <li><span className="text-sm text-frost/60">Size Guide</span></li>
-            <li><span className="text-sm text-frost/60">Contact: 0321-9404812</span></li>
+        {/* Col 3: Customer Care & Policy */}
+        <div className="space-y-3">
+          <h3 className="text-xs uppercase tracking-[0.2em] text-[#c5a880] font-semibold">Trust & Assurance</h3>
+          <ul className="text-xs space-y-2 text-frost/60">
+            <li>🚚 Nationwide Cash on Delivery (COD)</li>
+            <li>⏱️ 3 to 5 Working Days Delivery</li>
+            <li>🔄 7-Day Hassle-Free Replacement</li>
+            <li>✨ 100% Inspected Fabric Quality</li>
+            <li>💬 24/7 WhatsApp Order Helpline</li>
           </ul>
         </div>
 
-        {/* Newsletter */}
-        <div>
-          <h4 className="text-[10px] tracking-[0.3em] uppercase text-frost/40 mb-5">Stay Updated</h4>
-          <p className="text-sm text-frost/50 mb-4">Get early access to new drops and private offers.</p>
-          <form onSubmit={(e) => e.preventDefault()} className="flex">
-            <input
-              type="email"
-              placeholder="Email address"
-              className="flex-1 bg-obsidian border border-frost/15 px-4 py-3 text-xs text-frost placeholder:text-frost/30 focus:outline-none focus:border-gold/50 transition-colors"
-            />
-            <button className="bg-frost text-obsidian px-4 text-xs tracking-widest uppercase hover:bg-gold transition-colors">
-              Join
-            </button>
-          </form>
-          <div className="flex items-center gap-4 mt-6">
-            {[Instagram, Facebook, Twitter, Mail].map((Icon, i) => (
-              <a
-                key={i}
-                href="#"
-                className="text-frost/40 hover:text-gold transition-colors"
-                aria-label="Social link"
-              >
-                <Icon size={18} />
-              </a>
-            ))}
+        {/* Col 4: Exclusive Promo */}
+        <div className="space-y-3">
+          <h3 className="text-xs uppercase tracking-[0.2em] text-[#c5a880] font-semibold">Winter Promo</h3>
+          <div className="p-4 bg-white/[0.02] border border-[#c5a880]/30 rounded">
+            <p className="text-xs text-frost/80">Use code <span className="text-[#c5a880] font-bold">NEXURA20</span> on WhatsApp checkout for a flat 20% discount.</p>
           </div>
         </div>
       </div>
 
-      {/* Bottom bar */}
-      <div className="flex flex-col md:flex-row items-center justify-between gap-4 pt-8 border-t border-frost/10">
-        <p className="text-[11px] text-frost/40 tracking-wider">
-          © {new Date().getFullYear()} NEXURA. All rights reserved.
-        </p>
-        <p className="text-[11px] text-frost/40 tracking-wider">
-          WhatsApp: 0321-9404812 · COD Across Pakistan
-        </p>
-        <a href="#/admin" className="text-[11px] text-frost/25 tracking-wider hover:text-gold transition-colors">
-          Admin
-        </a>
+      {/* Bottom Legal bar */}
+      <div className="max-w-7xl mx-auto pt-8 flex flex-col md:flex-row items-center justify-between text-[11px] text-frost/40 gap-4">
+        <p>© 2026 NEXURA Garments Pakistan. All rights reserved.</p>
+        <p className="text-[10px] tracking-wider uppercase text-[#c5a880]/60">Engineered For The Extreme Cold</p>
       </div>
     </footer>
   );
