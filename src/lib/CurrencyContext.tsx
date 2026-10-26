@@ -8,7 +8,7 @@ const STORAGE_KEY = "nexura-currency-v2";
 export function CurrencyProvider({ children }: { children: ReactNode }) {
   const [currency, setCurrencyState] = useState<CurrencyCode>(() => {
     const stored = localStorage.getItem(STORAGE_KEY) as CurrencyCode | null;
-    if (stored && CURRENCIES[stored]) return stored;
+    if (stored && CURRENCIES && CURRENCIES[stored]) return stored;
     return "PKR";
   });
 
@@ -21,7 +21,6 @@ export function CurrencyProvider({ children }: { children: ReactNode }) {
     localStorage.setItem(STORAGE_KEY, currency);
   }, [currency]);
 
-  // یہ فنکشن آپ کی types.ts والے اصلی formatPrice کو کال کرے گا
   const formatPrice = (pkr: number): string => {
     return helperFormatPrice(pkr, currency);
   };
