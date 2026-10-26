@@ -1,11 +1,10 @@
-import React, { useState } from "react";
+import React from "react";
 import { useCart } from "../lib/CartContext";
 import { useCurrency } from "../lib/CurrencyContext";
 
 export default function Header() {
   const { totalCount, setIsCartOpen } = useCart();
   const { currency, setCurrency } = useCurrency();
-  const [isSearchOpen, setIsSearchOpen] = useState(false);
 
   return (
     <header className="sticky top-0 z-40 bg-[#0d0d0d]/95 backdrop-blur border-b border-[#c5a880]/20 px-4 md:px-10 py-4 transition-all">
@@ -20,16 +19,16 @@ export default function Header() {
 
         {/* Center Navigation Links (Desktop) */}
         <nav className="hidden md:flex items-center gap-8 text-[11px] uppercase tracking-[0.2em] text-frost/70 font-medium">
-          <a href="#catalog" className="hover:text-[#c5a880] transition-colors">All Garments</a>
-          <a href="#catalog" className="hover:text-[#c5a880] transition-colors">Jackets & Parkas</a>
+          <a href="#catalog" className="hover:text-[#c5a880] transition-colors">All Collections</a>
+          <a href="#catalog" className="hover:text-[#c5a880] transition-colors">Parkas & Puffer</a>
           <a href="#catalog" className="hover:text-[#c5a880] transition-colors">Hoodies</a>
-          <a href="#catalog" className="hover:text-[#c5a880] transition-colors">Kids & Family</a>
+          <a href="#catalog" className="hover:text-[#c5a880] transition-colors">Family & Kids</a>
         </nav>
 
-        {/* Right Action Icons: Search + Currency + Shopping Cart */}
+        {/* Right Actions: Search + Currency + Cart */}
         <div className="flex items-center gap-4">
           
-          {/* 1. Search Icon Button */}
+          {/* Search Button */}
           <button
             type="button"
             onClick={() => {
@@ -41,27 +40,29 @@ export default function Header() {
               }
             }}
             className="p-2 text-frost/70 hover:text-[#c5a880] transition-colors cursor-pointer"
-            title="Search Products"
+            title="Search Garments"
+            aria-label="Search Garments"
           >
             <span className="text-lg">🔍</span>
           </button>
 
-          {/* 2. Currency Selector (Default PKR) */}
+          {/* Currency Selector */}
           <select
             value={currency}
             onChange={(e) => setCurrency(e.target.value as any)}
             className="bg-neutral-900 border border-white/10 text-frost text-[10px] tracking-wider uppercase px-2 py-1.5 rounded outline-none focus:border-[#c5a880] cursor-pointer"
           >
-            <option value="PKR">PKR (Rs.)</option>
+            <option value="PKR">PKR (Rs)</option>
             <option value="USD">USD ($)</option>
           </select>
 
-          {/* 3. Shopping Cart Drawer Button */}
+          {/* Shopping Cart Drawer Trigger */}
           <button
             type="button"
             onClick={() => setIsCartOpen(true)}
             className="relative p-2 text-frost hover:text-[#c5a880] transition-all cursor-pointer bg-white/5 border border-white/10 rounded-full flex items-center justify-center hover:border-[#c5a880]"
             title="Open Shopping Bag"
+            aria-label="Open Shopping Bag"
           >
             <span className="text-lg">🛍️</span>
             {totalCount > 0 && (
