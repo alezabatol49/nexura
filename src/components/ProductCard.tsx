@@ -31,7 +31,7 @@ export default function ProductCard({ product, onQuickView }: Props) {
           className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
         />
         
-        {/* Overlay Button */}
+        {/* Quick View Overlay Button */}
         <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center p-4">
           <span className="bg-[#c5a880] text-black text-[10px] tracking-widest uppercase font-bold px-4 py-2 rounded-sm shadow-xl">
             Quick View
