@@ -105,3 +105,8 @@ export function buildWhatsAppOrderLink(opts: {
   const text = encodeURIComponent(lines.join("\n"));
   return `${WHATSAPP_LINK}?text=${text}`;
 }
+export interface CurrencyContextValue {
+  currency: CurrencyCode;
+  setCurrency: (c: CurrencyCode) => void;
+  formatPrice: (pkr: number) => string;
+}
