@@ -1,141 +1,78 @@
-import { useEffect, useState } from "react";
-import { Menu, X, ChevronDown } from "lucide-react";
-import CurrencySwitcher from "./CurrencySwitcher";
-import { CATEGORIES } from "../lib/types";
+import React, { useState } from "react";
+import { useCart } from "../lib/CartContext";
+import { useCurrency } from "../lib/CurrencyContext";
 
 export default function Header() {
-  const [scrolled, setScrolled] = useState(false);
-  const [mobileOpen, setMobileOpen] = useState(false);
-  const [catOpen, setCatOpen] = useState(false);
-
-  useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 40);
-    window.addEventListener("scroll", onScroll);
-    return () => window.removeEventListener("scroll", onScroll);
-  }, []);
-
-  const handleFilterClick = (slug: string) => {
-    setMobileOpen(false);
-    setCatOpen(false);
-
-    // کیٹلاگ سیکشن تک ہموار سکرول
-    const el = document.getElementById("catalog");
-    if (el) {
-      el.scrollIntoView({ behavior: "smooth" });
-    }
-
-    // کیٹلاگ کو فوری فلٹر ایونٹ بھیجنا
-    window.dispatchEvent(
-      new CustomEvent("nexura:filter", { detail: slug })
-    );
-  };
+  const { totalCount, setIsCartOpen } = useCart();
+  const { currency, setCurrency } = useCurrency();
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
 
   return (
-    <header
-      className={`sticky top-0 z-30 transition-all duration-500 ${
-        scrolled ? "bg-obsidian/95 backdrop-blur-md border-b border-frost/10" : "bg-obsidian/60 backdrop-blur-sm"
-      }`}
-    >
-      <div className="flex items-center justify-between gap-4 px-5 lg:px-10 py-4 lg:py-5">
-        {/* Left: Logo */}
-        <div className="flex items-center gap-3 shrink-0">
-          <button
-            type="button"
-            className="lg:hidden text-frost cursor-pointer"
-            onClick={() => setMobileOpen(true)}
-            aria-label="Open menu"
-          >
-            <Menu size={22} />
-          </button>
-          <a href="#top" className="block">
-            <span className="font-display text-xl lg:text-2xl tracking-[0.3em] text-frost font-bold pl-[0.3em]">
-              NEXURA
-            </span>
-          </a>
-        </div>
+    <header className="sticky top-0 z-40 bg-[#0d0d0d]/95 backdrop-blur border-b border-[#c5a880]/20 px-4 md:px-10 py-4 transition-all">
+      <div className="max-w-7xl mx-auto flex items-center justify-between">
+        
+        {/* Brand Logo */}
+        <a href="/" className="flex items-center gap-2 group">
+          <span className="font-display text-2xl md:text-3xl font-extrabold tracking-[0.25em] text-[#c5a880] group-hover:text-white transition-colors">
+            NEXURA
+          </span>
+        </a>
 
-        {/* Center: Desktop Navigation (Kids, Women, Men) */}
-        <nav className="hidden lg:flex items-center gap-7">
-          {CATEGORIES.slice(1, 4).map((c) => (
-            <button
-              key={c.slug}
-              type="button"
-              onClick={() => handleFilterClick(c.slug)}
-              className="text-[11px] tracking-[0.2em] uppercase text-frost/80 hover:text-frost font-medium transition-colors whitespace-nowrap cursor-pointer py-1"
-            >
-              {c.label}
-            </button>
-          ))}
-
-          {/* More Categories Dropdown */}
-          <div className="relative">
-            <button
-              type="button"
-              onClick={() => setCatOpen((v) => !v)}
-              className="flex items-center gap-1.5 text-[11px] tracking-[0.2em] uppercase text-frost/80 hover:text-frost font-medium transition-colors whitespace-nowrap cursor-pointer py-1"
-            >
-              More
-              <ChevronDown size={13} className={`transition-transform duration-300 ${catOpen ? "rotate-180" : ""}`} />
-            </button>
-            {catOpen && (
-              <>
-                <div className="fixed inset-0 z-40" onClick={() => setCatOpen(false)} />
-                <div className="absolute left-1/2 -translate-x-1/2 top-full mt-3 z-50 w-56 bg-[#0e1015] border border-frost/20 py-2 shadow-2xl rounded-sm">
-                  {CATEGORIES.slice(4).map((c) => (
-                    <button
-                      key={c.slug}
-                      type="button"
-                      onClick={() => handleFilterClick(c.slug)}
-                      className="block w-full text-left px-5 py-2.5 text-[11px] tracking-[0.2em] uppercase text-frost/70 hover:text-gold hover:bg-white/5 transition-colors cursor-pointer"
-                    >
-                      {c.label}
-                    </button>
-                  ))}
-                </div>
-              </>
-            )}
-          </div>
+        {/* Center Navigation Links (Desktop) */}
+        <nav className="hidden md:flex items-center gap-8 text-[11px] uppercase tracking-[0.2em] text-frost/70 font-medium">
+          <a href="#catalog" className="hover:text-[#c5a880] transition-colors">All Garments</a>
+          <a href="#catalog" className="hover:text-[#c5a880] transition-colors">Jackets & Parkas</a>
+          <a href="#catalog" className="hover:text-[#c5a880] transition-colors">Hoodies</a>
+          <a href="#catalog" className="hover:text-[#c5a880] transition-colors">Kids & Family</a>
         </nav>
 
-        {/* Right: Shop All + Currency */}
-        <div className="flex items-center gap-4 lg:gap-5 shrink-0">
+        {/* Right Action Icons: Search + Currency + Shopping Cart */}
+        <div className="flex items-center gap-4">
+          
+          {/* 1. Search Icon Button */}
           <button
             type="button"
-            onClick={() => handleFilterClick("all")}
-            className="hidden lg:block text-[11px] tracking-[0.2em] uppercase text-frost/80 hover:text-frost transition-colors whitespace-nowrap cursor-pointer"
+            onClick={() => {
+              const catalogSection = document.getElementById("catalog");
+              if (catalogSection) {
+                catalogSection.scrollIntoView({ behavior: "smooth" });
+                const searchInput = document.querySelector("#catalog input") as HTMLInputElement;
+                if (searchInput) searchInput.focus();
+              }
+            }}
+            className="p-2 text-frost/70 hover:text-[#c5a880] transition-colors cursor-pointer"
+            title="Search Products"
           >
-            Shop All
+            <span className="text-lg">🔍</span>
           </button>
-          <CurrencySwitcher />
+
+          {/* 2. Currency Selector (Default PKR) */}
+          <select
+            value={currency}
+            onChange={(e) => setCurrency(e.target.value as any)}
+            className="bg-neutral-900 border border-white/10 text-frost text-[10px] tracking-wider uppercase px-2 py-1.5 rounded outline-none focus:border-[#c5a880] cursor-pointer"
+          >
+            <option value="PKR">PKR (Rs.)</option>
+            <option value="USD">USD ($)</option>
+          </select>
+
+          {/* 3. Shopping Cart Drawer Button */}
+          <button
+            type="button"
+            onClick={() => setIsCartOpen(true)}
+            className="relative p-2 text-frost hover:text-[#c5a880] transition-all cursor-pointer bg-white/5 border border-white/10 rounded-full flex items-center justify-center hover:border-[#c5a880]"
+            title="Open Shopping Bag"
+          >
+            <span className="text-lg">🛍️</span>
+            {totalCount > 0 && (
+              <span className="absolute -top-1 -right-1 bg-[#c5a880] text-black text-[10px] font-bold w-4 h-4 rounded-full flex items-center justify-center font-mono shadow">
+                {totalCount}
+              </span>
+            )}
+          </button>
+
         </div>
       </div>
-
-      {/* Mobile Drawer */}
-      {mobileOpen && (
-        <div className="fixed inset-0 z-50 lg:hidden">
-          <div className="absolute inset-0 bg-obsidian/80 backdrop-blur-sm" onClick={() => setMobileOpen(false)} />
-          <div className="absolute left-0 top-0 h-full w-72 bg-[#0e1015] border-r border-frost/10 p-6">
-            <div className="flex items-center justify-between mb-10">
-              <span className="font-display text-xl tracking-[0.3em] text-frost font-bold pl-[0.3em]">NEXURA</span>
-              <button type="button" onClick={() => setMobileOpen(false)} className="text-frost/70 cursor-pointer">
-                <X size={20} />
-              </button>
-            </div>
-            <nav className="flex flex-col gap-5">
-              {CATEGORIES.map((c) => (
-                <button
-                  key={c.slug}
-                  type="button"
-                  onClick={() => handleFilterClick(c.slug)}
-                  className="text-left text-xs tracking-[0.2em] uppercase text-frost/70 hover:text-gold transition-colors cursor-pointer py-1"
-                >
-                  {c.label}
-                </button>
-              ))}
-            </nav>
-          </div>
-        </div>
-      )}
     </header>
   );
 }
