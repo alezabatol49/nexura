@@ -18,7 +18,7 @@ export default function ProductCard({ product, onQuickView }: Props) {
 
   return (
     <div className="group relative flex flex-col bg-[#111] border border-white/5 rounded-sm overflow-hidden hover:border-[#c5a880]/40 transition-all duration-300">
-      {/* Image Container */}
+      {/* Product Image */}
       <div 
         onClick={() => onQuickView(product)}
         className="relative aspect-[3/4] w-full overflow-hidden bg-neutral-900 cursor-pointer"
@@ -31,7 +31,7 @@ export default function ProductCard({ product, onQuickView }: Props) {
           className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
         />
         
-        {/* Quick View Overlay Button */}
+        {/* Quick View Overlay */}
         <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center p-4">
           <span className="bg-[#c5a880] text-black text-[10px] tracking-widest uppercase font-bold px-4 py-2 rounded-sm shadow-xl">
             Quick View
