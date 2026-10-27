@@ -157,4 +157,5 @@ export default function GeminiChatbot({ products }: Props) {
       )}
     </>
   );
-}
+} 
+
