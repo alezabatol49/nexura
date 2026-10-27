@@ -32,7 +32,7 @@ export async function askGeminiSalesman(
   const activeKey = getGeminiKey();
 
   const productContext = (availableProducts || []).slice(0, 20).map(p => 
-    `- ${p.name} | Category: ${p.category} | Price: Rs. ${p.price_pkr} | Sizes: ${p.sizes ? p.sizes.join(", ") : "Standard"}`
+    "- " + p.name + " | Category: " + p.category + " | Price: Rs. " + p.price_pkr + " | Sizes: " + (p.sizes ? p.sizes.join(", ") : "Standard")
   ).join("\n");
 
   const systemInstruction = 
