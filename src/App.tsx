@@ -42,16 +42,20 @@ export default function App() {
   const [searchQuery, setSearchQuery] = useState("");
   const [products, setProducts] = useState<Product[]>([]);
 
-  // ایڈمن پن کوڈ
   const [adminPin, setAdminPin] = useState("");
   const [isAdminAuthed, setIsAdminAuthed] = useState(false);
 
-  // پراڈکٹس لوڈ کر کے جیمنی بوٹ کو دینا تاکہ وہ گاہک کو صحیح چیزیں دکھائے
   useEffect(() => {
+    let isMounted = true;
     (async () => {
-      const { data } = await supabase.from("products").select("*").limit(50);
-      if (data) setProducts(data as Product[]);
+      const { data } = await supabase.from("products").select("*").limit(200);
+      if (isMounted && data) {
+        setProducts(data as Product[]);
+      }
     })();
+    return () => {
+      isMounted = false;
+    };
   }, []);
 
   if (route === "/admin") {
@@ -70,7 +74,7 @@ export default function App() {
               onKeyDown={(e) => {
                 if (e.key === "Enter") {
                   if (adminPin === "7860") setIsAdminAuthed(true);
-                  else alert("غلط پن کوڈ!");
+                  else alert("Ghalat PIN code!");
                 }
               }}
               className="w-full bg-black/60 border border-white/10 rounded px-4 py-2.5 text-frost text-sm text-center tracking-widest outline-none focus:border-[#c5a880] transition-colors mb-4"
@@ -79,7 +83,7 @@ export default function App() {
               type="button"
               onClick={() => {
                 if (adminPin === "7860") setIsAdminAuthed(true);
-                else alert("غلط پن کوڈ!");
+                else alert("Ghalat PIN code!");
               }}
               className="w-full bg-[#c5a880] text-black font-bold py-2.5 rounded text-xs uppercase tracking-widest hover:bg-[#d6bc96] transition-all cursor-pointer"
             >
@@ -96,10 +100,8 @@ export default function App() {
     <CurrencyProvider>
       <CartProvider>
         <div className="min-h-screen bg-obsidian text-frost relative selection:bg-[#c5a880] selection:text-black">
-          {/* Top Bar */}
           <TopBar />
 
-          {/* Header */}
           <Header searchQuery={searchQuery} setSearchQuery={setSearchQuery} />
 
           <main>
@@ -109,31 +111,24 @@ export default function App() {
             <Editorial />
           </main>
 
-          {/* Footer */}
           <Footer />
 
-          {/* دائیں طرف واٹس ایپ بٹن */}
           <FloatingWhatsApp />
 
-          {/* تیرتا ہوا شاپنگ بیگ */}
           <CartFloatingTrigger />
 
-          {/* شاپنگ بیگ دراز */}
           <CartDrawer />
 
-          {/* بائیں طرف NEXURA AI Stylist / Salesman */}
           <GeminiChatbot products={products} />
 
-          {/* Terms Button */}
           <button
             type="button"
             onClick={() => setShowTerms(true)}
             className="fixed bottom-4 left-36 z-40 bg-neutral-900/90 border border-[#c5a880]/40 text-[#c5a880] text-[9px] tracking-wider uppercase px-3 py-1.5 rounded-full shadow-lg hover:bg-[#c5a880] hover:text-black transition-all cursor-pointer backdrop-blur"
           >
-            📜 Policy
+            Policy
           </button>
 
-          {/* Terms Modal */}
           {showTerms && (
             <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-fadeIn">
               <div className="bg-[#121212] border border-[#c5a880]/30 rounded-xl max-w-xl w-full p-6 md:p-8 shadow-2xl relative text-frost max-h-[85vh] overflow-y-auto">
@@ -152,15 +147,15 @@ export default function App() {
                 <div className="space-y-4 text-xs md:text-sm text-frost/80 leading-relaxed font-light">
                   <div className="p-3.5 rounded bg-white/[0.02] border border-white/5">
                     <h4 className="font-semibold text-[#c5a880] text-sm mb-1">1. Cash on Delivery (COD)</h4>
-                    <p>پورے پاکستان میں کیش آن ڈلیوری کی سہولت موجود ہے۔ پارسل وصول کرتے وقت کوریئر رائیڈر کو نقد ادائیگی کریں۔</p>
+                    <p>Poore Pakistan mein COD available hai. Parcel receive karne ke baad payment karein.</p>
                   </div>
                   <div className="p-3.5 rounded bg-white/[0.02] border border-white/5">
                     <h4 className="font-semibold text-[#c5a880] text-sm mb-1">2. Shipping & Delivery Time</h4>
-                    <p>آرڈر کی تصدیق کے بعد 3 سے 5 کام کے دنوں کے اندر پارسل آپ کی دہلیز تک پہنچا دیا جاتا ہے۔</p>
+                    <p>Order confirm hone ke 3 se 5 working days ke andar delivery ho jati hai.</p>
                   </div>
                   <div className="p-3.5 rounded bg-white/[0.02] border border-white/5">
                     <h4 className="font-semibold text-[#c5a880] text-sm mb-1">3. 7-Day Replacement Guarantee</h4>
-                    <p>اگر پروڈکٹ میں سائز کا مسئلہ ہو یا سامان خراب نکلے، تو 7 دن کے اندر واٹس ایپ پر باآسانی ریپلیسمنٹ حاصل کریں۔</p>
+                    <p>Size ya quality issue par 7 din ke andar WhatsApp par asani se exchange mil jati hai.</p>
                   </div>
                 </div>
               </div>
@@ -170,5 +165,4 @@ export default function App() {
       </CartProvider>
     </CurrencyProvider>
   );
-}   
-
+}
