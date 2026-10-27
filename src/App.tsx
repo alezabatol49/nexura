@@ -165,4 +165,5 @@ export default function App() {
       </CartProvider>
     </CurrencyProvider>
   );
-}
+} 
+
