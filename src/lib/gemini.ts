@@ -1,164 +1,68 @@
-export type GeminiResult = {
-  name: string;
-  category: string;
-  description: string;
-  sizes: string[];
-  compareAtPrice: number;
-};
+import { Product } from "./types";
 
+// آپ کی فراہم کردہ جیمنی کی براہِ راست کوڈ میں جوڑ دی گئی ہے
 const GEMINI_API_KEY = "AQ.Ab8RN6I_PSZh_3aGfTqOMCswLOqqibIwHq-FGKhVuho3SmCgfw";
-const GEMINI_ENDPOINT = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`;
 
-const STORAGE_KEY = "nexura-gemini-key";
+export async function askGeminiSalesman(
+  userMessage: string,
+  chatHistory: { role: "user" | "model"; text: string }[],
+  availableProducts: Product[]
+): Promise<string> {
+  // اگر ڈیٹا بیس سے پراڈکٹس آئیں تو ان کا خلاصہ
+  const productContext = availableProducts.slice(0, 20).map(p => 
+    `- ${p.name} | Category: ${p.category} | Price: Rs. ${p.price_pkr} | Sizes: ${p.sizes?.join(", ") || "Standard"}`
+  ).join("\n");
 
-export function getGeminiKey(): string {
+  // سخت ہدایات: صرف NEXURA گارمنٹس کے لیے، رئیل اسٹیٹ سے مکمل پاک
+  const systemInstruction = `
+آپ کا نام "NEXURA AI Stylist & Salesman" ہے۔
+آپ صرف اور صرف "NEXURA.PK" کے پرسنل لگژری فیشن اور کپڑوں کے سیلز مینیجر ہیں۔
+
+انتہائی سخت اصول (Strict Rules):
+1. آپ کا تعلق صرف اور صرف گارمنٹس اور کپڑوں کے برانڈ (NEXURA.PK) سے ہے۔
+2. آپ کا رئیل اسٹیٹ، پراپرٹی، پلاٹوں، فائلوں یا کسی دوسری ویب سائٹ سے کوئی تعلق نہیں ہے۔ اگر کوئی صارف زمین، پلاٹ، فائل یا رئیل اسٹیٹ کی بات کرے، تو نہایت شائستگی سے کہیں:
+"معذرت، میں صرف NEXURA.PK گارمنٹس اور کپڑوں کا فیشن اسٹائلسٹ ہوں۔ پراپرٹی یا رئیل اسٹیٹ کی رہنمائی کے لیے آپ بن طاہا ایسوسی ایٹس سے الگ رابطہ کر سکتے ہیں۔ یہاں میں آپ کو بہترین ونٹر جیکٹس، ہڈیز اور کپڑوں کا انتخاب کروا سکتا ہوں۔"
+3. آپ کا لہجہ انتہائی بااخلاق، شائستہ، پراعتماد اور اردو / رومن اردو میں پروفیشنل ہونا چاہیے۔
+4. کسٹمر کو ان کے قد اور وزن کے مطابق بہترین سائز (S, M, L, XL, XXL) تجویز کریں۔
+5. اہم اسٹور تفصیلات:
+   - پروموشنل کوڈ: "NEXURA20" (ہر چیز پر فلیٹ 20% رعایت)۔
+   - ڈلیوری: پورے پاکستان میں کیش آن ڈلیوری (COD) 3 سے 5 کام کے دنوں میں۔
+   - گارنٹی: 7 دن کی آسان سائز ریپلیسمنٹ۔
+   - واٹس ایپ آرڈر ہیلپ لائن: 03219404812۔
+
+ہمارے کچھ موجودہ پراڈکٹس:
+${productContext}
+
+کسٹمر کو ہمیشہ مختصر، پرکشش اور خریداری کے لیے آمادہ کرنے والا جواب دیں۔
+`;
+
   try {
-    const stored = localStorage.getItem(STORAGE_KEY);
-    return stored || GEMINI_API_KEY;
-  } catch {
-    return GEMINI_API_KEY;
-  }
-}
+    const formattedHistory = chatHistory.map(msg => ({
+      role: msg.role === "user" ? "user" : "model",
+      parts: [{ text: msg.text }]
+    }));
 
-export function saveGeminiKey(key: string): void {
-  localStorage.setItem(STORAGE_KEY, key);
-}
-
-export function isGeminiConfigured(): boolean {
-  return getGeminiKey().trim().length > 0;
-}
-
-const CATEGORY_MAP: Record<string, string> = {
-  "puffer jackets": "puffer-jackets",
-  "puffer jacket": "puffer-jackets",
-  "arctic parkas": "arctic-parkas",
-  "arctic parka": "arctic-parkas",
-  "heavyweight hoodies": "hoodies",
-  "heavyweight hoodie": "hoodies",
-  "hoodies": "hoodies",
-  "hoodie": "hoodies",
-  "cashmere sweaters": "cashmere-sweaters",
-  "cashmere sweater": "cashmere-sweaters",
-  "sweaters": "cashmere-sweaters",
-  "sweater": "cashmere-sweaters",
-  "accessories": "gloves",
-  "accessory": "gloves",
-  "gloves": "gloves",
-  "glove": "gloves",
-  "thermal socks": "thermal-socks",
-  "socks": "thermal-socks",
-  "balaclavas": "balaclavas",
-  "balaclava": "balaclavas",
-};
-
-function mapCategory(raw: string): string {
-  const lower = raw.trim().toLowerCase();
-  return CATEGORY_MAP[lower] ?? "puffer-jackets";
-}
-
-/**
- * Sends a product image (base64) to Gemini Flash and returns AI-generated
- * product metadata: name, category, description, sizes, and compare-at price.
- */
-export async function analyzeProductImage(
-  base64DataUrl: string,
-  salePrice: number
-): Promise<GeminiResult> {
-  const apiKey = getGeminiKey();
-  if (!apiKey) throw new Error("Gemini API key not configured");
-
-  // Parse the data URL: data:image/jpeg;base64,....
-  const match = base64DataUrl.match(/^data:(image\/[a-zA-Z+]+);base64,(.+)$/);
-  if (!match) throw new Error("Invalid image data");
-  const mimeType = match[1];
-  const base64Data = match[2];
-
-  const prompt = `You are an expert luxury outerwear copywriter for NEXURA brand. Examine this garment photo and output only raw JSON without backticks:
-{
-  "name": "Luxury product title matching NEXURA aesthetic",
-  "category": "Choose closest: Puffer Jackets | Arctic Parkas | Heavyweight Hoodies | Cashmere Sweaters | Accessories",
-  "description": "2-3 punchy luxury sentences highlighting extreme cold protection, premium fabric, and modern silhouette",
-  "sizes": ["S", "M", "L", "XL"],
-  "compareAtPrice": ${Math.round(salePrice * 1.25 / 50) * 50}
-}
-
-The sale price is ${salePrice} PKR. Set compareAtPrice to ${Math.round(salePrice * 1.25 / 50) * 50} (sale price * 1.25 rounded to nearest 50). Output ONLY the JSON object, no markdown, no backticks, no explanation.`;
-
-  const body = {
-    contents: [
+    const response = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`,
       {
-        parts: [
-          { text: prompt },
-          {
-            inline_data: {
-              mime_type: mimeType,
-              data: base64Data,
-            },
-          },
-        ],
-      },
-    ],
-    generationConfig: {
-      temperature: 0.7,
-      maxOutputTokens: 800,
-      responseMimeType: "application/json",
-    },
-  };
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          contents: [
+            ...formattedHistory,
+            { role: "user", parts: [{ text: `${systemInstruction}\n\nکسٹمر کا سوال: ${userMessage}` }] }
+          ],
+          generationConfig: {
+            temperature: 0.6,
+            maxOutputTokens: 350,
+          }
+        }),
+      }
+    );
 
-  const res = await fetch(GEMINI_ENDPOINT, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(body),
-  });
-
-  if (!res.ok) {
-    const errText = await res.text().catch(() => "");
-    let msg = `Gemini API error (${res.status})`;
-    try {
-      const errJson = JSON.parse(errText);
-      if (errJson?.error?.message) msg = errJson.error.message;
-    } catch {
-      if (errText) msg += `: ${errText.slice(0, 120)}`;
-    }
-    throw new Error(msg);
+    const data = await response.json();
+    return data.candidates?.[0]?.content?.parts?.[0]?.text || "جی محترم! میں NEXURA.PK سے ہوں۔ بتائیے ونٹر کلیکشن میں آپ کو کس سائز یا ورائٹی کی تلاش ہے؟";
+  } catch (error) {
+    return "معذرت، اس وقت سرور مصروف ہے۔ آپ واٹس ایپ نمبر 03219404812 پر براہِ راست رابطہ کر کے فوری رہنمائی حاصل کر سکتے ہیں!";
   }
-
-  const data = await res.json();
-  const text: string | undefined = data?.candidates?.[0]?.content?.parts?.[0]?.text;
-  if (!text) throw new Error("Gemini returned an empty response");
-
-  // Strip markdown fences if present
-  let cleaned = text.trim();
-  if (cleaned.startsWith("```")) {
-    cleaned = cleaned.replace(/^```(?:json)?\s*/i, "").replace(/\s*```$/i, "");
-  }
-
-  let parsed: Record<string, unknown>;
-  try {
-    parsed = JSON.parse(cleaned);
-  } catch {
-    // Try to extract JSON from the text
-    const jsonMatch = cleaned.match(/\{[\s\S]*\}/);
-    if (!jsonMatch) throw new Error("Could not parse Gemini response as JSON");
-    parsed = JSON.parse(jsonMatch[0]);
-  }
-
-  const name = typeof parsed.name === "string" ? parsed.name.trim() : "";
-  const category = typeof parsed.category === "string" ? mapCategory(parsed.category) : "puffer-jackets";
-  const description = typeof parsed.description === "string" ? parsed.description.trim() : "";
-  const rawSizes = Array.isArray(parsed.sizes) ? parsed.sizes : ["S", "M", "L", "XL"];
-  const sizes = rawSizes.filter((s): s is string => typeof s === "string").map((s) => s.trim().toUpperCase()).filter((s) => s.length > 0);
-  const compareAtPrice = typeof parsed.compareAtPrice === "number"
-    ? parsed.compareAtPrice
-    : Math.round(salePrice * 1.25 / 50) * 50;
-
-  if (!name) throw new Error("Gemini did not return a product name");
-
-  return {
-    name,
-    category,
-    description,
-    sizes: sizes.length > 0 ? sizes : ["S", "M", "L", "XL"],
-    compareAtPrice,
-  };
 }
