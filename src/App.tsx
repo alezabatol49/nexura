@@ -24,7 +24,7 @@ function CartFloatingTrigger() {
     <button
       type="button"
       onClick={() => setIsCartOpen(true)}
-      className="fixed bottom-24 right-4 z-40 bg-[#c5a880] text-black font-bold p-3.5 rounded-full shadow-2xl flex items-center justify-center hover:scale-110 active:scale-95 transition-all cursor-pointer"
+      className="fixed bottom-24 right-6 z-40 bg-[#c5a880] text-black font-bold p-3.5 rounded-full shadow-2xl flex items-center justify-center hover:scale-110 active:scale-95 transition-all cursor-pointer border border-black/20"
       title="View Shopping Bag"
       aria-label="View Shopping Bag"
     >
@@ -38,10 +38,8 @@ function CartFloatingTrigger() {
 
 export default function App() {
   const route = useRoute();
-  const [showTerms, setShowTerms] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [products, setProducts] = useState<Product[]>([]);
-
   const [adminPin, setAdminPin] = useState("");
   const [isAdminAuthed, setIsAdminAuthed] = useState(false);
 
@@ -99,9 +97,8 @@ export default function App() {
   return (
     <CurrencyProvider>
       <CartProvider>
-        <div className="min-h-screen bg-obsidian text-frost relative selection:bg-[#c5a880] selection:text-black">
+        <div className="min-h-screen bg-[#070707] text-frost relative selection:bg-[#c5a880] selection:text-black">
           <TopBar />
-
           <Header searchQuery={searchQuery} setSearchQuery={setSearchQuery} />
 
           <main>
@@ -113,57 +110,13 @@ export default function App() {
 
           <Footer />
 
+          {/* Clean Floating Controls */}
           <FloatingWhatsApp />
-
           <CartFloatingTrigger />
-
           <CartDrawer />
-
           <GeminiChatbot products={products} />
-
-          <button
-            type="button"
-            onClick={() => setShowTerms(true)}
-            className="fixed bottom-4 left-36 z-40 bg-neutral-900/90 border border-[#c5a880]/40 text-[#c5a880] text-[9px] tracking-wider uppercase px-3 py-1.5 rounded-full shadow-lg hover:bg-[#c5a880] hover:text-black transition-all cursor-pointer backdrop-blur"
-          >
-            Policy
-          </button>
-
-          {showTerms && (
-            <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-fadeIn">
-              <div className="bg-[#121212] border border-[#c5a880]/30 rounded-xl max-w-xl w-full p-6 md:p-8 shadow-2xl relative text-frost max-h-[85vh] overflow-y-auto">
-                <button
-                  type="button"
-                  onClick={() => setShowTerms(false)}
-                  className="absolute top-4 right-4 text-frost/60 hover:text-[#c5a880] text-xl font-bold p-1 cursor-pointer"
-                >
-                  ✕
-                </button>
-                <div className="text-center mb-6">
-                  <span className="text-[10px] tracking-[0.25em] text-[#c5a880] uppercase font-bold">Official Policy</span>
-                  <h3 className="font-display text-2xl md:text-3xl text-frost font-bold mt-1">Terms & Conditions</h3>
-                  <div className="h-0.5 w-12 bg-[#c5a880] mx-auto mt-3"></div>
-                </div>
-                <div className="space-y-4 text-xs md:text-sm text-frost/80 leading-relaxed font-light">
-                  <div className="p-3.5 rounded bg-white/[0.02] border border-white/5">
-                    <h4 className="font-semibold text-[#c5a880] text-sm mb-1">1. Cash on Delivery (COD)</h4>
-                    <p>Poore Pakistan mein COD available hai. Parcel receive karne ke baad payment karein.</p>
-                  </div>
-                  <div className="p-3.5 rounded bg-white/[0.02] border border-white/5">
-                    <h4 className="font-semibold text-[#c5a880] text-sm mb-1">2. Shipping & Delivery Time</h4>
-                    <p>Order confirm hone ke 3 se 5 working days ke andar delivery ho jati hai.</p>
-                  </div>
-                  <div className="p-3.5 rounded bg-white/[0.02] border border-white/5">
-                    <h4 className="font-semibold text-[#c5a880] text-sm mb-1">3. 7-Day Replacement Guarantee</h4>
-                    <p>Size ya quality issue par 7 din ke andar WhatsApp par asani se exchange mil jati hai.</p>
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
         </div>
       </CartProvider>
     </CurrencyProvider>
   );
-} 
-
+}
