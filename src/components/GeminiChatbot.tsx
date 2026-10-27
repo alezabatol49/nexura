@@ -18,21 +18,31 @@ export default function GeminiChatbot({ products }: Props) {
   const [messages, setMessages] = useState<Message[]>([
     {
       role: "model",
-      text: "Assalam-o-Alaikum! Main NEXURA ka AI Stylist hoon. Sizing, winter jackets, hoodies ya order ke mutaliq koi bhi sawal puchein!"
+      text: "Assalam-o-Alaikum! Main NEXURA ka AI Fashion Stylist hoon. Sizing, jackets, unstitched suits aur COD delivery ke mutaliq sawal puchein!"
     }
   ]);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
+  // کارڈ کے "Ask AI Salesman" بٹن پر کلک ہوتے ہی بوٹ کو خود کھولنا
+  useEffect(() => {
+    const handleCustomOpen = (event: any) => {
+      setIsOpen(true);
+      if (event.detail?.productName) {
+        const itemQuery = `Mujhe "${event.detail.productName}" (${event.detail.price}) ke size aur quality ke bare mein advise karein.`;
+        handleCustomSend(itemQuery);
+      }
+    };
+
+    window.addEventListener("open-nexura-ai", handleCustomOpen);
+    return () => window.removeEventListener("open-nexura-ai", handleCustomOpen);
+  }, [messages, products]);
+
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, isOpen]);
 
-  const handleSend = async () => {
-    if (!input.trim() || loading) return;
-
-    const userText = input;
-    setInput("");
+  const handleCustomSend = async (userText: string) => {
     const newHistory: Message[] = [...messages, { role: "user", text: userText }];
     setMessages(newHistory);
     setLoading(true);
@@ -42,25 +52,31 @@ export default function GeminiChatbot({ products }: Props) {
     setLoading(false);
   };
 
+  const handleSend = async () => {
+    if (!input.trim() || loading) return;
+    const userText = input;
+    setInput("");
+    await handleCustomSend(userText);
+  };
+
   return (
     <>
-      {/* Floating AI Button */}
+      {/* لگژری گولڈن فلوٹنگ بٹن - بائیں کونے میں */}
       <button
         type="button"
         onClick={() => setIsOpen(!isOpen)}
-        className="fixed bottom-5 left-5 z-40 bg-gradient-to-r from-[#c5a880] to-[#b39369] text-black font-bold p-3.5 rounded-full shadow-2xl flex items-center justify-center hover:scale-110 active:scale-95 transition-all cursor-pointer border border-white/20"
-        title="Chat with AI Stylist"
+        className="fixed bottom-6 left-6 z-40 bg-[#121212] border-2 border-[#c5a880] text-[#c5a880] hover:bg-[#c5a880] hover:text-black font-bold p-3 sm:px-4 sm:py-2.5 rounded-full shadow-2xl flex items-center justify-center gap-2 transition-all duration-300 hover:scale-105 active:scale-95 cursor-pointer"
+        title="NEXURA AI Stylist"
       >
-        <span className="text-xl">✨</span>
-        <span className="hidden sm:inline ml-2 text-xs font-mono font-bold uppercase tracking-wider">
+        <span className="text-lg">✨</span>
+        <span className="text-xs font-mono font-bold tracking-widest uppercase hidden sm:inline">
           AI Stylist
         </span>
       </button>
 
-      {/* Chat Window */}
+      {/* چیٹ ونڈو */}
       {isOpen && (
-        <div className="fixed bottom-20 left-4 sm:left-6 z-50 w-[92vw] sm:w-96 bg-[#121212] border border-[#c5a880]/40 rounded-2xl shadow-2xl flex flex-col overflow-hidden h-[500px] max-h-[80vh] backdrop-blur-xl">
-          {/* Header */}
+        <div className="fixed bottom-20 left-4 sm:left-6 z-50 w-[92vw] sm:w-[380px] bg-[#121212] border border-[#c5a880]/40 rounded-2xl shadow-2xl flex flex-col overflow-hidden h-[520px] max-h-[82vh] backdrop-blur-xl">
           <div className="bg-[#181818] border-b border-white/10 p-3.5 flex items-center justify-between">
             <div className="flex items-center gap-2.5">
               <span className="w-8 h-8 rounded-full bg-[#c5a880] text-black flex items-center justify-center text-sm font-bold shadow">
@@ -85,26 +101,25 @@ export default function GeminiChatbot({ products }: Props) {
           {/* Quick FAQ Pills */}
           <div className="p-2 bg-black/40 border-b border-white/5 flex gap-1.5 overflow-x-auto text-[10px]">
             <button
-              onClick={() => { setInput("Mujhe size guide karein meri height 5'10 aur weight 75kg hai"); }}
-              className="bg-white/5 hover:bg-[#c5a880]/20 text-frost/80 px-2.5 py-1 rounded-full whitespace-nowrap border border-white/5"
+              onClick={() => { setInput("Mera height 5'10 aur weight 75kg hai, kaunsa size sahi rahega?"); }}
+              className="bg-white/5 hover:bg-[#c5a880]/20 text-frost/80 px-2.5 py-1 rounded-full whitespace-nowrap border border-white/5 cursor-pointer"
             >
               📏 Size Help
             </button>
             <button
-              onClick={() => { setInput("Best winter jacket kaunsi hai?"); }}
-              className="bg-white/5 hover:bg-[#c5a880]/20 text-frost/80 px-2.5 py-1 rounded-full whitespace-nowrap border border-white/5"
+              onClick={() => { setInput("Unstitched men winter suits ki fabric aur quality kaisi hai?"); }}
+              className="bg-white/5 hover:bg-[#c5a880]/20 text-frost/80 px-2.5 py-1 rounded-full whitespace-nowrap border border-white/5 cursor-pointer"
             >
-              🧥 Best Jacket
+              👔 Unstitched Suits
             </button>
             <button
-              onClick={() => { setInput("Delivery charges aur COD details kya hain?"); }}
-              className="bg-white/5 hover:bg-[#c5a880]/20 text-frost/80 px-2.5 py-1 rounded-full whitespace-nowrap border border-white/5"
+              onClick={() => { setInput("COD delivery charges aur return replacement policy kya hai?"); }}
+              className="bg-white/5 hover:bg-[#c5a880]/20 text-frost/80 px-2.5 py-1 rounded-full whitespace-nowrap border border-white/5 cursor-pointer"
             >
-              🚚 Delivery & COD
+              🚚 COD & Policy
             </button>
           </div>
 
-          {/* Messages Container */}
           <div className="flex-grow p-4 overflow-y-auto space-y-3 text-xs leading-relaxed">
             {messages.map((m, idx) => (
               <div
@@ -112,7 +127,7 @@ export default function GeminiChatbot({ products }: Props) {
                 className={`flex ${m.role === "user" ? "justify-end" : "justify-start"}`}
               >
                 <div
-                  className={`max-w-[82%] p-3 rounded-xl ${
+                  className={`max-w-[84%] p-3 rounded-xl ${
                     m.role === "user"
                       ? "bg-[#c5a880] text-black font-medium rounded-br-none shadow"
                       : "bg-white/5 border border-white/10 text-frost rounded-bl-none"
@@ -135,11 +150,10 @@ export default function GeminiChatbot({ products }: Props) {
             <div ref={messagesEndRef} />
           </div>
 
-          {/* Input Field */}
           <div className="p-3 bg-[#181818] border-t border-white/10 flex gap-2">
             <input
               type="text"
-              placeholder="Sawal puchein (e.g. Size, Jackets, Hoodies)..."
+              placeholder="Sawal puchein (e.g. Size, Jackets, Suits)..."
               value={input}
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && handleSend()}
@@ -157,5 +171,4 @@ export default function GeminiChatbot({ products }: Props) {
       )}
     </>
   );
-} 
-
+}
