@@ -3,7 +3,7 @@ import { Snowflake, Truck, MessageCircle } from "lucide-react";
 const items = [
   { icon: Snowflake, text: "Winter Drop Live" },
   { icon: Truck, text: "Cash on Delivery Available Across Pakistan" },
-  { icon: MessageCircle, text: "WhatsApp: 0321-9404812" },
+  { icon: MessageCircle, text: "WhatsApp: 0300-1700927" },
 ];
 
 export default function TopBar() {
