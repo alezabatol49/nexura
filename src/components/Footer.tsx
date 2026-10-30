@@ -14,7 +14,7 @@ export default function Footer() {
             Pakistan's premier luxury outerwear and winter fashion atelier. Crafted for enduring warmth, timeless silhouettes, and effortless elegance.
           </p>
           <div className="text-[11px] font-mono text-[#c5a880]">
-            Helpline / WhatsApp: +92 321 9404812
+            Helpline / WhatsApp: +92 300 1700927
           </div>
         </div>
 
