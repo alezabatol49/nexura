@@ -49,7 +49,7 @@ export const CURRENCIES: Record<CurrencyCode, CurrencyInfo> = {
   GBP: { code: "GBP", symbol: "£", label: "GBP", rate: 1 / 352 },
 };
 
-export const WHATSAPP_NUMBER = "923219404812";
+export const WHATSAPP_NUMBER = "923001700927";
 export const WHATSAPP_LINK = `https://wa.me/${WHATSAPP_NUMBER}`;
 
 export const CATEGORIES = [
