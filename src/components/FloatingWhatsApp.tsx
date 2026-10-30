@@ -5,7 +5,7 @@ export default function FloatingWhatsApp() {
     const text = encodeURIComponent(
       `*Assalam-o-Alaikum NEXURA.PK!*\n\nMujhe store collection aur order placement ke bare mein help chahiye.`
     );
-    window.open(`https://wa.me/923219404812?text=${text}`, "_blank");
+    window.open(`https://wa.me/923001700927?text=${text}`, "_blank");
   };
 
   return (
