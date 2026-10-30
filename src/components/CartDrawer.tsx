@@ -21,7 +21,7 @@ export default function CartDrawer() {
       `*Assalam-o-Alaikum NEXURA.PK!*\n\nMain ye items Cash on Delivery par order karna chahta hoon:\n\n${orderList}\n💰 *Total Amount:* ${formatPrice(totalPrice)}\n\nDelivery details:\nName:\nPhone:\nAddress:\nCity:`
     );
 
-    window.open(`https://wa.me/923219404812?text=${msg}`, "_blank");
+    window.open(`https://wa.me/923001700927?text=${msg}`, "_blank");
   };
 
   return (
